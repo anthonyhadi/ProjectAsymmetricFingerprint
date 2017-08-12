@@ -59,7 +59,8 @@ public class MainActivity extends Activity {
 
     @Inject KeyguardManager mKeyguardManager;
     @Inject FingerprintManager mFingerprintManager;
-    @Inject FingerprintAuthenticationDialogFragment mFragment;
+    @Inject
+    FingerprintAuthenticationDialogFragment mFragment;
     @Inject KeyStore mKeyStore;
     @Inject KeyPairGenerator mKeyPairGenerator;
     @Inject Signature mSignature;

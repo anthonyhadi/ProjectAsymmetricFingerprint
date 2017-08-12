@@ -16,13 +16,12 @@
 -->
 
 <resources>
-    <string name="app_name">AsymmetricFingerprintDialog</string>
+    <string name="app_name">Blu Token Pro</string>
     <string name="intro_message">
         <![CDATA[
         
             
-This sample demonstrates how you can use registered fingerprints to authenticate the user
-before proceeding some actions such as purchasing an item. This version uses asymmetric keys.
+using fingerprint as token for login and doing transaction
             
         
         ]]>
