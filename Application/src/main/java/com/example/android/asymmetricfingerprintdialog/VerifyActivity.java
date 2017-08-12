@@ -4,13 +4,29 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alimuzaffar.lib.pin.PinEntryEditText;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyFactory;
+import java.security.KeyStore;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 
 import javax.inject.Inject;
 
@@ -28,6 +44,67 @@ public class VerifyActivity extends AppCompatActivity {
     @Bind(R.id.link_login) TextView _loginLink;
     String userId;
     String password;
+    ProgressDialog progressDialog;
+
+    private class EnrollTask extends AsyncTask<JSONObject, Integer, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(JSONObject... params) {
+            try {
+                URL url = new URL("http://192.168.110.154:6969/hackathon/enroll");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setRequestProperty("Accept", "application/json");
+
+                OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                wr.write(params[0].toString());
+                wr.close();
+
+                InputStream stream = urlConnection.getInputStream();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line + "\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                String jsonString = buffer.toString();
+
+                JSONObject json = new JSONObject(jsonString);
+                urlConnection.disconnect();
+                if (Integer.parseInt(json.get("status").toString()) == 200) {
+                    return Boolean.TRUE;
+                } else {
+                    return Boolean.FALSE;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Boolean.FALSE;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                // success
+                onSignupSuccess();
+                // onLoginFailed();
+                progressDialog.dismiss();
+            } else {
+                // failed
+            }
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -67,12 +144,31 @@ public class VerifyActivity extends AppCompatActivity {
                         new Runnable() {
                             public void run() {
                                 // On complete call either onLoginSuccess or onLoginFailed
-                                onSignupSuccess();
+//                                onSignupSuccess();
                                 // onLoginFailed();
-                                progressDialog.dismiss();
+//                                progressDialog.dismiss();
                             }
                         }, 1000);
+                JSONObject obj = new JSONObject();
+                try {
+                    obj.put("userId", userId);
+                    obj.put("password", password);
+                    obj.put("pin", str);
 
+                    KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+                    keyStore.load(null);
+                    PublicKey publicKey = keyStore.getCertificate(MainActivity.KEY_NAME).getPublicKey();
+                    KeyFactory factory = KeyFactory.getInstance(publicKey.getAlgorithm());
+                    X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey.getEncoded());
+                    PublicKey verificationKey = factory.generatePublic(spec);
+
+                    byte[] publicKeyByte = verificationKey.getEncoded();
+                    String base64Encoded = Base64.encodeToString(publicKeyByte, Base64.DEFAULT);
+                    obj.put("publicKey", base64Encoded);
+                    new EnrollTask().execute(obj);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 _pinEntry.setText(null);
             }
         });

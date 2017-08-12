@@ -4,8 +4,11 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.fingerprint.FingerprintManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -13,6 +16,21 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.android.asymmetricfingerprintdialog.server.Transaction;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 
 import javax.inject.Inject;
@@ -29,6 +47,139 @@ public class LoginActivity extends AppCompatActivity {
     @Bind(R.id.input_password) EditText _passwordText;
     @Bind(R.id.btn_login) Button _loginButton;
     @Bind(R.id.link_signup) TextView _signupLink;
+    ProgressDialog progressDialog;
+
+    private class VerifyTask extends AsyncTask<JSONObject, Integer, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(JSONObject... params) {
+            try {
+                URL url = new URL("http://192.168.110.154:6969/hackathon/verify");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setRequestProperty("Accept", "application/json");
+
+                OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                wr.write(params[0].toString());
+                wr.close();
+
+                InputStream stream = urlConnection.getInputStream();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line + "\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                String jsonString = buffer.toString();
+
+                JSONObject json = new JSONObject(jsonString);
+                urlConnection.disconnect();
+                if (Integer.parseInt(json.get("status").toString()) == 200) {
+                    return Boolean.TRUE;
+                } else {
+                    return Boolean.FALSE;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Boolean.FALSE;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                // success
+                progressDialog.dismiss();
+            } else {
+                // failed
+            }
+        }
+    }
+
+    private class VerifyFingerprintTask extends AsyncTask<JSONObject, Integer, Boolean> {
+
+        private FingerprintManager.CryptoObject mCryptoObject;
+
+        @Override
+        protected Boolean doInBackground(JSONObject... params) {
+            try {
+                URL url = new URL("http://192.168.110.154:6969/hackathon/verify");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setRequestProperty("Accept", "application/json");
+
+                OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                wr.write(params[0].toString());
+                wr.close();
+
+                InputStream stream = urlConnection.getInputStream();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line + "\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                String jsonString = buffer.toString();
+
+                JSONObject json = new JSONObject(jsonString);
+                urlConnection.disconnect();
+                if (json.get("publicKey") != null) {
+                    Signature signature = mCryptoObject.getSignature();
+                    byte[] sigBytes = signature.sign();
+                    Transaction transaction = new Transaction(params[0].get("userId").toString(), 1, new SecureRandom().nextLong());
+                    byte[] publicKeyByte = Base64.decode(json.get("publicKey").toString(), Base64.DEFAULT);
+                    PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKeyByte));
+                    Signature verificationFunction = Signature.getInstance("SHA256withECDSA");
+                    verificationFunction.initVerify(publicKey);
+                    verificationFunction.update(transaction.toByteArray());
+                    if (verificationFunction.verify(sigBytes)) {
+                        // Transaction is verified with the public key associated with the user
+                        // Do some post purchase processing in the server
+                        return Boolean.TRUE;
+                    } else {
+                        return Boolean.FALSE;
+                    }
+                } else {
+                    return Boolean.FALSE;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Boolean.FALSE;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                // success
+                progressDialog.dismiss();
+            } else {
+                // failed
+            }
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
