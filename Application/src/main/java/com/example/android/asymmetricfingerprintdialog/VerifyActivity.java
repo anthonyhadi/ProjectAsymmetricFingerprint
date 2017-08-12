@@ -56,12 +56,8 @@ public class VerifyActivity extends AppCompatActivity {
                 progressDialog.setMessage("Verifying PIN...");
                 progressDialog.show();
                 // TODO: call service /enroll {userId, password, publicKey, pin}
-                if (str.toString().equals("1234")) {
-                    Toast.makeText(getBaseContext(), "Verify PIN success", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getBaseContext(), "Verify PIN failed", Toast.LENGTH_LONG).show();
-                    _pinEntry.setText(null);
-                }
+                onSignupSuccess();
+                _pinEntry.setText(null);
                 progressDialog.dismiss();
             }
         });
