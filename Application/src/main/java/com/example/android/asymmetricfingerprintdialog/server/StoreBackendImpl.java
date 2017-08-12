@@ -17,6 +17,19 @@
 package com.example.android.asymmetricfingerprintdialog.server;
 
 
+import android.util.Log;
+
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -66,9 +79,38 @@ public class StoreBackendImpl implements StoreBackend {
     }
 
     @Override
-    public boolean enroll(String userId, String password, PublicKey publicKey) {
+    public boolean enroll(final String userId, final String password, final PublicKey publicKey) {
+        String publicKeyStr = publicKey.getEncoded().toString();
+        System.out.print(publicKeyStr);
         if (publicKey != null) {
-            mPublicKeys.put(userId, publicKey);
+            Thread thread = new Thread() {
+                public void run() {
+                    try {
+                        JSONObject obj = new JSONObject();
+                        obj.put("userId", userId);
+                        obj.put("password", password);
+                        URL url = new URL("http://192.168.110.154:6969/hackathon/enroll");
+                        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                        urlConnection.setDoOutput(true);
+                        urlConnection.setChunkedStreamingMode(0);
+                        urlConnection.setRequestProperty("Content-Type", "application/json");
+                        urlConnection.setRequestProperty("Accept", "application/json");
+
+                        OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
+                        out.write(obj.toString().getBytes("utf-8"));
+
+                        InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+                        int a = in.read();
+                        System.out.println(a);
+
+                        urlConnection.disconnect();
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+            };
+            thread.start();
+//            mPublicKeys.put(userId, publicKey);
         }
         // We just ignore the provided password here, but in real life, it is registered to the
         // backend.
