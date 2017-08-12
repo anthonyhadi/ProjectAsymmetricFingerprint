@@ -1,7 +1,9 @@
 package com.example.android.asymmetricfingerprintdialog;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -10,6 +12,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Date;
+
+import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -29,6 +35,15 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
+
+        SharedPreferences prefs = this.getSharedPreferences("com.bluecamel.app", Context.MODE_PRIVATE);
+
+        String userid_key = "com.bluecamel.app.userid";
+
+        // use a default value using new Date()
+        String userId = prefs.getString(userid_key, "demo");
+
+        _emailText.setText(userId);
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
@@ -104,7 +119,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void onLoginSuccess() {
         _loginButton.setEnabled(true);
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent intent = new Intent(getApplicationContext(), TabActivity.class);
         startActivityForResult(intent, SUCCESS_SIGNIN);
         finish();
         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);

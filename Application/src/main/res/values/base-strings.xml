@@ -16,7 +16,7 @@
 -->
 
 <resources>
-    <string name="app_name">Blu Token Pro</string>
+    <string name="app_name">Idempotent</string>
     <string name="intro_message">
         <![CDATA[
         

@@ -1,7 +1,9 @@
 package com.example.android.asymmetricfingerprintdialog;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -10,11 +12,15 @@ import android.widget.Toast;
 
 import com.alimuzaffar.lib.pin.PinEntryEditText;
 
+import javax.inject.Inject;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class VerifyActivity extends AppCompatActivity {
     private static final String TAG = "VerifyActivity";
+
+    @Inject SharedPreferences mSharedPreferences;
 
     @Bind(R.id.title_pin) TextView _pinTitle;
     @Bind(R.id.title_request) TextView _requestTitle;
@@ -56,14 +62,27 @@ public class VerifyActivity extends AppCompatActivity {
                 progressDialog.setMessage("Verifying PIN...");
                 progressDialog.show();
                 // TODO: call service /enroll {userId, password, publicKey, pin}
-                onSignupSuccess();
+
+                new android.os.Handler().postDelayed(
+                        new Runnable() {
+                            public void run() {
+                                // On complete call either onLoginSuccess or onLoginFailed
+                                onSignupSuccess();
+                                // onLoginFailed();
+                                progressDialog.dismiss();
+                            }
+                        }, 1000);
+
                 _pinEntry.setText(null);
-                progressDialog.dismiss();
             }
         });
     }
 
     public void onSignupSuccess() {
+        SharedPreferences prefs = this.getSharedPreferences("com.bluecamel.app", Context.MODE_PRIVATE);
+        String userid_key = "com.bluecamel.app.userid";
+        prefs.edit().putString(userid_key, userId).apply();
+
         setResult(RESULT_OK, null);
         _pinEntry.setText(null);
         // Finish the registration screen and return to the Login activity

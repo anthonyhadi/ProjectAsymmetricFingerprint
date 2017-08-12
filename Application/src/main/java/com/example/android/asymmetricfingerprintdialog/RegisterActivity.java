@@ -36,6 +36,7 @@ public class RegisterActivity extends AppCompatActivity {
     @Bind(R.id.link_login) TextView _loginLink;
     String userId;
     String password;
+    ProgressDialog progressDialog;
 
     private class GeneratePinTask extends AsyncTask<JSONObject, Integer, Boolean> {
 
@@ -50,7 +51,7 @@ public class RegisterActivity extends AppCompatActivity {
                 urlConnection.setRequestProperty("Accept", "application/json");
 
                 OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
-                wr.write(params.toString());
+                wr.write(params[0].toString());
                 wr.close();
 
                 InputStream stream = urlConnection.getInputStream();
@@ -86,7 +87,13 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Boolean result) {
-
+            if (result) {
+                // success
+                onSignupSuccess();
+                progressDialog.dismiss();
+            } else {
+                // failed
+            }
         }
     }
 
@@ -125,7 +132,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         _signupButton.setEnabled(false);
 
-        final ProgressDialog progressDialog = new ProgressDialog(RegisterActivity.this,
+        progressDialog = new ProgressDialog(RegisterActivity.this,
                 R.style.AppTheme_Dark_Dialog);
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage("Creating Account...");
@@ -136,10 +143,17 @@ public class RegisterActivity extends AppCompatActivity {
         String mobile = _mobileText.getText().toString();
         password = _passwordText.getText().toString();
 
-        // TODO: call services /generatePin {userId,password,email,mobile}
-        onSignupSuccess();
+        JSONObject json = new JSONObject();
+        try {
+            json.put("userId", userId);
+            json.put("password", password);
+            json.put("email", email);
+            json.put("mobile", mobile);
+            new GeneratePinTask().execute(json);
+        } catch (Exception e) {
 
-        progressDialog.dismiss();
+        }
+
     }
 
     public void onSignupSuccess() {

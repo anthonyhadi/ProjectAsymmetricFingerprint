@@ -15,12 +15,12 @@
   ~ limitations under the License
   -->
 <resources>
-    <color name="warning_color">#f4511e</color>
+    <color name="warning_color">#F8BBD0</color>
     <color name="hint_color">#42000000</color>
-    <color name="success_color">#009688</color>
-    <color name="primary">#E43F3F</color>
-    <color name="primary_dark">#E12929</color>
-    <color name="primary_darker">#CC1D1D</color>
+    <color name="success_color">#9FA8DA</color>
+    <color name="primary">#7E57C2</color>
+    <color name="primary_dark">#5e35b1</color>
+    <color name="primary_darker">#4527a0</color>
     <color name="accent">#FFFFFF</color>
 
     <color name="black">#000000</color>

@@ -20,4 +20,9 @@
         android:title="@string/use_fingerprint_to_authenticate_title"
         android:persistent="true"
         android:defaultValue="true" />
+    <EditTextPreference
+        android:key="@string/user_id_key"
+        android:title="@string/user_id_title"
+        android:persistent="true"
+        android:defaultValue="@string/user_id_title" />
 </PreferenceScreen>
