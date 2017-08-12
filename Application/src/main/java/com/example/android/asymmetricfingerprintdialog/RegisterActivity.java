@@ -2,6 +2,7 @@ package com.example.android.asymmetricfingerprintdialog;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -10,6 +11,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -26,6 +36,59 @@ public class RegisterActivity extends AppCompatActivity {
     @Bind(R.id.link_login) TextView _loginLink;
     String userId;
     String password;
+
+    private class GeneratePinTask extends AsyncTask<JSONObject, Integer, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(JSONObject... params) {
+            try {
+                URL url = new URL("http://192.168.110.154:6969/hackathon/generatePin");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setRequestProperty("Accept", "application/json");
+
+                OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                wr.write(params.toString());
+                wr.close();
+
+                InputStream stream = urlConnection.getInputStream();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line + "\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                String jsonString = buffer.toString();
+
+                JSONObject json = new JSONObject(jsonString);
+                urlConnection.disconnect();
+                if (Integer.parseInt(json.get("status").toString()) == 200) {
+                    return Boolean.TRUE;
+                } else {
+                    return Boolean.FALSE;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Boolean.FALSE;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+
+        }
+
+        protected void onPostExecute(Boolean result) {
+
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

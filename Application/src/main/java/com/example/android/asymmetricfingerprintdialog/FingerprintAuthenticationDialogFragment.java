@@ -206,7 +206,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
             KeyFactory factory = KeyFactory.getInstance(publicKey.getAlgorithm());
             X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey.getEncoded());
             PublicKey verificationKey = factory.generatePublic(spec);
-            mStoreBackend.enroll("user", "password", verificationKey);
+            mStoreBackend.enroll("user", "password", verificationKey, "78797879");
         } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException |
                 IOException | InvalidKeySpecException e) {
             e.printStackTrace();
