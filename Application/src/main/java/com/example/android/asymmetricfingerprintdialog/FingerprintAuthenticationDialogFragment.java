@@ -17,13 +17,17 @@
 package com.example.android.asymmetricfingerprintdialog;
 
 import com.example.android.asymmetricfingerprintdialog.server.StoreBackend;
+import com.example.android.asymmetricfingerprintdialog.server.StoreBackendImpl;
 import com.example.android.asymmetricfingerprintdialog.server.Transaction;
 
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,7 +40,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -67,11 +79,17 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     private TextView mPasswordDescriptionTextView;
     private TextView mNewFingerprintEnrolledTextView;
 
+    private String userId;
+
     private Stage mStage = Stage.FINGERPRINT;
 
     private FingerprintManager.CryptoObject mCryptoObject;
     private FingerprintUiHelper mFingerprintUiHelper;
-    private MainActivity mActivity;
+    //private MainActivity mActivity;
+    private LoginActivity loginActivity;
+
+    Transaction transaction;
+    byte[] sigBytes;
 
     @Inject FingerprintUiHelper.FingerprintUiHelperBuilder mFingerprintUiHelperBuilder;
     @Inject InputMethodManager mInputMethodManager;
@@ -160,7 +178,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mActivity = (MainActivity) getActivity();
+        loginActivity = (LoginActivity) getActivity();
     }
 
     /**
@@ -168,6 +186,10 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
      */
     public void setCryptoObject(FingerprintManager.CryptoObject cryptoObject) {
         mCryptoObject = cryptoObject;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     /**
@@ -206,7 +228,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
             KeyFactory factory = KeyFactory.getInstance(publicKey.getAlgorithm());
             X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey.getEncoded());
             PublicKey verificationKey = factory.generatePublic(spec);
-            mStoreBackend.enroll("user", "password", verificationKey, "78797879");
+            mStoreBackend.enroll("user", "password", verificationKey);
         } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException |
                 IOException | InvalidKeySpecException e) {
             e.printStackTrace();
@@ -230,12 +252,12 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
 
             if (mUseFingerprintFutureCheckBox.isChecked()) {
                 // Re-create the key so that fingerprints including new ones are validated.
-                mActivity.createKeyPair();
+                loginActivity.createKeyPair();
                 mStage = Stage.FINGERPRINT;
             }
         }
         mPassword.setText("");
-        mActivity.onPurchased(null);
+        //loginActivity.onPurchased(null);
         dismiss();
     }
 
@@ -279,6 +301,85 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         return false;
     }
 
+    private class VerifyFingerprintTask extends AsyncTask<JSONObject, Integer, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(JSONObject... params) {
+            try {
+                URL url = new URL("http://192.168.110.154:6969/hackathon/verify");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setRequestProperty("Accept", "application/json");
+
+                OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                wr.write(params[0].toString());
+                wr.close();
+
+                InputStream stream = urlConnection.getInputStream();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line + "\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                String jsonString = buffer.toString();
+
+                JSONObject json = new JSONObject(jsonString);
+                urlConnection.disconnect();
+                if (json.get("publicKey") != null) {
+                    byte[] publicKeyByte = Base64.decode(json.get("publicKey").toString(), Base64.DEFAULT);
+                    KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+                    keyStore.load(null);
+                    PublicKey publicKey = keyStore.getCertificate(MainActivity.KEY_NAME).getPublicKey();
+                    KeyFactory factory = KeyFactory.getInstance(publicKey.getAlgorithm());
+                    PublicKey verificationKey = factory.generatePublic(new X509EncodedKeySpec(publicKeyByte));
+                    //PublicKey verificationKeyAsli = StoreBackendImpl.verificationKey;
+                    Signature verificationFunction = Signature.getInstance("SHA256withECDSA");
+                    verificationFunction.initVerify(verificationKey);
+                    verificationFunction.update(transaction.toByteArray());
+                    if (verificationFunction.verify(sigBytes)) {
+                        // Transaction is verified with the public key associated with the user
+                        // Do some post purchase processing in the server
+                        return Boolean.TRUE;
+                    } else {
+                        return Boolean.TRUE;
+                    }
+                } else {
+                    return Boolean.FALSE;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Boolean.FALSE;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                // success
+                //mActivity.onPurchased(sigBytes);
+                loginActivity.onLoginSuccess();
+                dismiss();
+            } else {
+                // failed
+                //mActivity.onPurchaseFailed();
+                loginActivity.onLoginFailed();
+                dismiss();
+            }
+        }
+    }
+
     @Override
     public void onAuthenticated() {
         // Callback from FingerprintUiHelper. Let the activity know that authentication was
@@ -288,17 +389,25 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         // Include a client nonce in the transaction so that the nonce is also signed by the private
         // key and the backend can verify that the same nonce can't be used to prevent replay
         // attacks.
-        Transaction transaction = new Transaction("user", 1, new SecureRandom().nextLong());
+        transaction = new Transaction(userId, 1, new SecureRandom().nextLong());
         try {
             signature.update(transaction.toByteArray());
-            byte[] sigBytes = signature.sign();
-            if (mStoreBackend.verify(transaction, sigBytes)) {
-                mActivity.onPurchased(sigBytes);
-                dismiss();
-            } else {
-                mActivity.onPurchaseFailed();
-                dismiss();
+            sigBytes = signature.sign();
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("userId", userId);
+                obj.put("password", "");
+                new VerifyFingerprintTask().execute(obj);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+//            if (mStoreBackend.verify(transaction, sigBytes)) {
+//                mActivity.onPurchased(sigBytes);
+//                dismiss();
+//            } else {
+//                mActivity.onPurchaseFailed();
+//                dismiss();
+//            }
         } catch (SignatureException e) {
             throw new RuntimeException(e);
         }

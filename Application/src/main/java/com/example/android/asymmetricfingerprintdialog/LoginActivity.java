@@ -1,5 +1,6 @@
 package com.example.android.asymmetricfingerprintdialog;
 
+import android.app.KeyguardManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +8,9 @@ import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
+import android.security.keystore.KeyProperties;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
@@ -21,15 +25,26 @@ import com.example.android.asymmetricfingerprintdialog.server.Transaction;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.spec.ECGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 
@@ -43,12 +58,30 @@ public class LoginActivity extends AppCompatActivity {
     private static final int REQUEST_SIGNUP = 0;
     private static final int SUCCESS_SIGNIN = 1;
 
+    private static final String DIALOG_FRAGMENT_TAG = "myFragment";
+    /** Alias for our key in the Android Key Store */
+    public static final String KEY_NAME = "my_key";
+
     @Bind(R.id.input_email) EditText _emailText;
     @Bind(R.id.input_password) EditText _passwordText;
     @Bind(R.id.btn_login) Button _loginButton;
     @Bind(R.id.btn_login_finger) Button _loginFingerButton;
     @Bind(R.id.link_signup) TextView _signupLink;
+
+    @Inject KeyguardManager mKeyguardManager;
+    @Inject FingerprintAuthenticationDialogFragment mFragment;
+    @Inject Signature mSignature;
+    @Inject SharedPreferences mSharedPreferences;
+    @Inject KeyStore mKeyStore;
+    @Inject KeyPairGenerator mKeyPairGenerator;
+    @Inject FingerprintManager mFingerprintManager;
+
     ProgressDialog progressDialog;
+    FingerprintManager.CryptoObject mCryptoObject;
+    Transaction transaction;
+    String userId;
+
+    byte[] sigBytes;
 
     private class VerifyTask extends AsyncTask<JSONObject, Integer, Boolean> {
 
@@ -110,8 +143,6 @@ public class LoginActivity extends AppCompatActivity {
 
     private class VerifyFingerprintTask extends AsyncTask<JSONObject, Integer, Boolean> {
 
-        private FingerprintManager.CryptoObject mCryptoObject;
-
         @Override
         protected Boolean doInBackground(JSONObject... params) {
             try {
@@ -144,9 +175,6 @@ public class LoginActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject(jsonString);
                 urlConnection.disconnect();
                 if (json.get("publicKey") != null) {
-                    Signature signature = mCryptoObject.getSignature();
-                    byte[] sigBytes = signature.sign();
-                    Transaction transaction = new Transaction(params[0].get("userId").toString(), 1, new SecureRandom().nextLong());
                     byte[] publicKeyByte = Base64.decode(json.get("publicKey").toString(), Base64.DEFAULT);
                     PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKeyByte));
                     Signature verificationFunction = Signature.getInstance("SHA256withECDSA");
@@ -185,6 +213,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((InjectedApplication) getApplication()).inject(this);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
 
@@ -193,7 +222,7 @@ public class LoginActivity extends AppCompatActivity {
         String userid_key = "com.bluecamel.app.userid";
 
         // use a default value using new Date()
-        String userId = prefs.getString(userid_key, "demo");
+        userId = prefs.getString(userid_key, "demo");
 
         _emailText.setText(userId);
 
@@ -205,11 +234,62 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+//        if (!mKeyguardManager.isKeyguardSecure()) {
+//            // Show a message that the user hasn't set up a fingerprint or lock screen.
+//            Toast.makeText(this,
+//                    "Secure lock screen hasn't set up.\n"
+//                            + "Go to 'Settings -> Security -> Fingerprint' to set up a fingerprint",
+//                    Toast.LENGTH_LONG).show();
+//            purchaseButton.setEnabled(false);
+//            return;
+//        }
+//        //noinspection ResourceType
+//        if (!mFingerprintManager.hasEnrolledFingerprints()) {
+//            purchaseButton.setEnabled(false);
+//            // This happens when no fingerprints are registered.
+//            Toast.makeText(this,
+//                    "Go to 'Settings -> Security -> Fingerprint' and register at least one fingerprint",
+//                    Toast.LENGTH_LONG).show();
+//            return;
+//        }
+        createKeyPair();
+
         _loginFingerButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                loginFinger();
+//                findViewById(R.id.confirmation_message).setVisibility(View.GONE);
+//                findViewById(R.id.encrypted_message).setVisibility(View.GONE);
+
+                // Set up the crypto object for later. The object will be authenticated by use
+                // of the fingerprint.
+                if (initSignature()) {
+
+                    // Show the fingerprint dialog. The user has the option to use the fingerprint with
+                    // crypto, or you can fall back to using a server-side verified password.
+                    mFragment.setUserId(userId);
+                    mFragment.setCryptoObject(new FingerprintManager.CryptoObject(mSignature));
+                    boolean useFingerprintPreference = mSharedPreferences
+                            .getBoolean(getString(R.string.use_fingerprint_to_authenticate_key),
+                                    true);
+                    if (useFingerprintPreference) {
+                        mFragment.setStage(
+                                FingerprintAuthenticationDialogFragment.Stage.FINGERPRINT);
+                    } else {
+                        mFragment.setStage(
+                                FingerprintAuthenticationDialogFragment.Stage.PASSWORD);
+                    }
+                    mFragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
+                } else {
+                    // This happens if the lock screen has been disabled or or a fingerprint got
+                    // enrolled. Thus show the dialog to authenticate with their password first
+                    // and ask the user if they want to authenticate with fingerprints in the
+                    // future
+                    mFragment.setStage(
+                            FingerprintAuthenticationDialogFragment.Stage.NEW_FINGERPRINT_ENROLLED);
+                    mFragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
+                }
+                //loginFinger();
             }
         });
 
@@ -224,6 +304,54 @@ public class LoginActivity extends AppCompatActivity {
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             }
         });
+    }
+
+    /**
+     * Initialize the {@link Signature} instance with the created key in the
+     * {@link #createKeyPair()} method.
+     *
+     * @return {@code true} if initialization is successful, {@code false} if the lock screen has
+     * been disabled or reset after the key was generated, or if a fingerprint got enrolled after
+     * the key was generated.
+     */
+    private boolean initSignature() {
+        try {
+            mKeyStore.load(null);
+            PrivateKey key = (PrivateKey) mKeyStore.getKey(KEY_NAME, null);
+            mSignature.initSign(key);
+            return true;
+        } catch (KeyPermanentlyInvalidatedException e) {
+            return false;
+        } catch (KeyStoreException | CertificateException | UnrecoverableKeyException | IOException
+                | NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new RuntimeException("Failed to init Cipher", e);
+        }
+    }
+
+    /**
+     * Generates an asymmetric key pair in the Android Keystore. Every use of the private key must
+     * be authorized by the user authenticating with fingerprint. Public key use is unrestricted.
+     */
+    public void createKeyPair() {
+        // The enrolling flow for fingerprint. This is where you ask the user to set up fingerprint
+        // for your flow. Use of keys is necessary if you need to know if the set of
+        // enrolled fingerprints has changed.
+        try {
+            // Set the alias of the entry in Android KeyStore where the key will appear
+            // and the constrains (purposes) in the constructor of the Builder
+            mKeyPairGenerator.initialize(
+                    new KeyGenParameterSpec.Builder(KEY_NAME,
+                            KeyProperties.PURPOSE_SIGN)
+                            .setDigests(KeyProperties.DIGEST_SHA256)
+                            .setAlgorithmParameterSpec(new ECGenParameterSpec("secp256r1"))
+                            // Require the user to authenticate with a fingerprint to authorize
+                            // every use of the private key
+                            .setUserAuthenticationRequired(true)
+                            .build());
+            mKeyPairGenerator.generateKeyPair();
+        } catch (InvalidAlgorithmParameterException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void login() {
@@ -256,12 +384,20 @@ public class LoginActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                     }
                 }, 1000);
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("userId", email);
+            obj.put("password", password);
+            new VerifyTask().execute(obj);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void loginFinger() {
         Log.d(TAG, "LoginFinger");
 
-        if (!validate()) {
+        if (!validateFinger()) {
             onLoginFailed();
             return;
         }
@@ -272,8 +408,17 @@ public class LoginActivity extends AppCompatActivity {
         String password = _passwordText.getText().toString();
 
         // TODO: open fingerprint dialog and call /verify on server.
-
-
+        JSONObject obj = new JSONObject();
+        try {
+            Signature signature = mCryptoObject.getSignature();
+            sigBytes = signature.sign();
+            transaction = new Transaction(email, 1, new SecureRandom().nextLong());
+            obj.put("userId", email);
+            obj.put("password", "");
+            new VerifyFingerprintTask().execute(obj);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -327,6 +472,22 @@ public class LoginActivity extends AppCompatActivity {
             valid = false;
         } else {
             _passwordText.setError(null);
+        }
+
+        return valid;
+    }
+
+    public boolean validateFinger() {
+        boolean valid = true;
+
+        String email = _emailText.getText().toString();
+        String password = _passwordText.getText().toString();
+
+        if (email.isEmpty()) {
+            _emailText.setError("username cannot be empty");
+            valid = false;
+        } else {
+            _emailText.setError(null);
         }
 
         return valid;

@@ -46,8 +46,10 @@ import java.util.Set;
  */
 public class StoreBackendImpl implements StoreBackend {
 
-    private final Map<String, PublicKey> mPublicKeys = new HashMap<>();
+    public Map<String, PublicKey> mPublicKeys = new HashMap<>();
     private final Set<Transaction> mReceivedTransactions = new HashSet<>();
+
+    public static PublicKey verificationKey;
 
     @Override
     public boolean verify(Transaction transaction, byte[] transactionSignature) {
@@ -80,55 +82,9 @@ public class StoreBackendImpl implements StoreBackend {
     }
 
     @Override
-    public boolean enroll(final String userId, final String password, final PublicKey publicKey, final String pin) {
+    public boolean enroll(String userId, String password, PublicKey publicKey) {
         if (publicKey != null) {
-            Thread thread = new Thread() {
-                public void run() {
-                    try {
-                        JSONObject obj = new JSONObject();
-                        obj.put("userId", userId);
-                        obj.put("password", password);
-                        obj.put("pin", pin);
-
-                        byte[] publicKeyByte = publicKey.getEncoded();
-                        String base64Encoded = Base64.encodeToString(publicKeyByte, Base64.DEFAULT);
-                        obj.put("publicKey", base64Encoded);
-
-                        URL url = new URL("http://192.168.110.154:6969/hackathon/enroll");
-                        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                        urlConnection.setDoOutput(true);
-                        urlConnection.setChunkedStreamingMode(0);
-                        urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                        urlConnection.setRequestProperty("Accept", "application/json");
-
-                        OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
-                        wr.write(obj.toString());
-                        wr.close();
-
-                        InputStream stream = urlConnection.getInputStream();
-
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-
-                        StringBuffer buffer = new StringBuffer();
-                        String line = "";
-
-                        while ((line = reader.readLine()) != null) {
-                            buffer.append(line + "\n");
-                            Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
-
-                        }
-
-                        String jsonString = buffer.toString();
-
-                        JSONObject json = new JSONObject(jsonString);
-                        urlConnection.disconnect();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-            thread.start();
-//            mPublicKeys.put(userId, publicKey);
+            mPublicKeys.put(userId, publicKey);
         }
         // We just ignore the provided password here, but in real life, it is registered to the
         // backend.

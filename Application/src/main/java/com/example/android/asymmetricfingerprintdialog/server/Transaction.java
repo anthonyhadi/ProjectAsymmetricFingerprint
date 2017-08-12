@@ -27,10 +27,10 @@ import java.util.Objects;
 public class Transaction {
 
     /** The unique ID of the item of the purchase */
-    private final Long mItemId;
+    private Long mItemId;
 
     /** The unique user ID who made the transaction */
-    private final String mUserId;
+    private String mUserId;
 
     /**
      * The random long value that will be also signed by the private key and verified in the server

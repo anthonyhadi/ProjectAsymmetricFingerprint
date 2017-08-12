@@ -56,7 +56,7 @@ public interface StoreBackend {
      * @param publicKey the public key object to verify the signature from the user
      * @return true if the enrollment was successful, false otherwise
      */
-    boolean enroll(final String userId, final String password, final PublicKey publicKey, final String pin);
+    boolean enroll(final String userId, final String password, final PublicKey publicKey);
 
 
     boolean generatePin(final String userId, final String password, final String email, final String mobile);

@@ -14,6 +14,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alimuzaffar.lib.pin.PinEntryEditText;
+import com.example.android.asymmetricfingerprintdialog.server.StoreBackend;
+import com.example.android.asymmetricfingerprintdialog.server.StoreBackendImpl;
 
 import org.json.JSONObject;
 
@@ -42,6 +44,9 @@ public class VerifyActivity extends AppCompatActivity {
     @Bind(R.id.title_request) TextView _requestTitle;
     @Bind(R.id.txt_pin_entry) PinEntryEditText _pinEntry;
     @Bind(R.id.link_login) TextView _loginLink;
+
+    @Inject
+    StoreBackend mStoreBackend;
     String userId;
     String password;
     ProgressDialog progressDialog;
@@ -133,22 +138,13 @@ public class VerifyActivity extends AppCompatActivity {
         _pinEntry.setOnPinEnteredListener(new PinEntryEditText.OnPinEnteredListener() {
             @Override
             public void onPinEntered(CharSequence str) {
-                final ProgressDialog progressDialog = new ProgressDialog(VerifyActivity.this,
+                progressDialog = new ProgressDialog(VerifyActivity.this,
                         R.style.AppTheme_Dark_Dialog);
                 progressDialog.setIndeterminate(true);
                 progressDialog.setMessage("Verifying PIN...");
                 progressDialog.show();
                 // TODO: call service /enroll {userId, password, publicKey, pin}
 
-                new android.os.Handler().postDelayed(
-                        new Runnable() {
-                            public void run() {
-                                // On complete call either onLoginSuccess or onLoginFailed
-//                                onSignupSuccess();
-                                // onLoginFailed();
-//                                progressDialog.dismiss();
-                            }
-                        }, 1000);
                 JSONObject obj = new JSONObject();
                 try {
                     obj.put("userId", userId);
@@ -161,7 +157,8 @@ public class VerifyActivity extends AppCompatActivity {
                     KeyFactory factory = KeyFactory.getInstance(publicKey.getAlgorithm());
                     X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKey.getEncoded());
                     PublicKey verificationKey = factory.generatePublic(spec);
-
+                    String algorithm = verificationKey.getAlgorithm();
+                    StoreBackendImpl.verificationKey = verificationKey;
                     byte[] publicKeyByte = verificationKey.getEncoded();
                     String base64Encoded = Base64.encodeToString(publicKeyByte, Base64.DEFAULT);
                     obj.put("publicKey", base64Encoded);
