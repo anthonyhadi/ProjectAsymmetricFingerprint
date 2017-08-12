@@ -17,6 +17,7 @@
 package com.example.android.asymmetricfingerprintdialog.server;
 
 
+import android.util.Base64;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -79,9 +80,7 @@ public class StoreBackendImpl implements StoreBackend {
     }
 
     @Override
-    public boolean enroll(final String userId, final String password, final PublicKey publicKey) {
-        String publicKeyStr = publicKey.getEncoded().toString();
-        System.out.print(publicKeyStr);
+    public boolean enroll(final String userId, final String password, final PublicKey publicKey, final String pin) {
         if (publicKey != null) {
             Thread thread = new Thread() {
                 public void run() {
@@ -89,22 +88,41 @@ public class StoreBackendImpl implements StoreBackend {
                         JSONObject obj = new JSONObject();
                         obj.put("userId", userId);
                         obj.put("password", password);
+                        obj.put("pin", pin);
+
+                        byte[] publicKeyByte = publicKey.getEncoded();
+                        String base64Encoded = Base64.encodeToString(publicKeyByte, Base64.DEFAULT);
+                        obj.put("publicKey", base64Encoded);
+
                         URL url = new URL("http://192.168.110.154:6969/hackathon/enroll");
                         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                         urlConnection.setDoOutput(true);
                         urlConnection.setChunkedStreamingMode(0);
-                        urlConnection.setRequestProperty("Content-Type", "application/json");
+                        urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
                         urlConnection.setRequestProperty("Accept", "application/json");
 
-                        OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
-                        out.write(obj.toString().getBytes("utf-8"));
+                        OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                        wr.write(obj.toString());
+                        wr.close();
 
-                        InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-                        int a = in.read();
-                        System.out.println(a);
+                        InputStream stream = urlConnection.getInputStream();
 
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                        StringBuffer buffer = new StringBuffer();
+                        String line = "";
+
+                        while ((line = reader.readLine()) != null) {
+                            buffer.append(line + "\n");
+                            Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                        }
+
+                        String jsonString = buffer.toString();
+
+                        JSONObject json = new JSONObject(jsonString);
                         urlConnection.disconnect();
-                    } catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -114,6 +132,54 @@ public class StoreBackendImpl implements StoreBackend {
         }
         // We just ignore the provided password here, but in real life, it is registered to the
         // backend.
+        return true;
+    }
+
+    @Override
+    public boolean generatePin(final String userId, final String password, final String email, final String mobile) {
+        Thread thread = new Thread() {
+            public void run() {
+                try {
+                    JSONObject obj = new JSONObject();
+                    obj.put("userId", userId);
+                    obj.put("password", password);
+                    obj.put("email", email);
+                    obj.put("mobile", mobile);
+
+                    URL url = new URL("http://192.168.110.154:6969/hackathon/generatePin");
+                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setDoOutput(true);
+                    urlConnection.setChunkedStreamingMode(0);
+                    urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                    urlConnection.setRequestProperty("Accept", "application/json");
+
+                    OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                    wr.write(obj.toString());
+                    wr.close();
+
+                    InputStream stream = urlConnection.getInputStream();
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                    StringBuffer buffer = new StringBuffer();
+                    String line = "";
+
+                    while ((line = reader.readLine()) != null) {
+                        buffer.append(line + "\n");
+                        Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                    }
+
+                    String jsonString = buffer.toString();
+
+                    JSONObject json = new JSONObject(jsonString);
+                    urlConnection.disconnect();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
         return true;
     }
 }
