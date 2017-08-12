@@ -56,7 +56,7 @@ public class VerifyActivity extends AppCompatActivity {
                 progressDialog.setMessage("Verifying PIN...");
                 progressDialog.show();
                 // TODO: call service /enroll {userId, password, publicKey, pin}
-
+                onSignupSuccess();
                 _pinEntry.setText(null);
                 progressDialog.dismiss();
             }

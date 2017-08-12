@@ -74,7 +74,7 @@ public class RegisterActivity extends AppCompatActivity {
         password = _passwordText.getText().toString();
 
         // TODO: call services /generatePin {userId,password,email,mobile}
-
+        onSignupSuccess();
 
         progressDialog.dismiss();
     }
