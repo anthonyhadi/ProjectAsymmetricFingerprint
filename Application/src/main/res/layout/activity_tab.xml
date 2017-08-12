@@ -130,6 +130,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="?android:attr/windowBackground"
+        app:itemIconTint="@color/tabselector"
+        app:itemTextColor="@color/tabselector"
+        android:layout_alignParentBottom="true"
         app:menu="@menu/navigation" />
 
 </LinearLayout>

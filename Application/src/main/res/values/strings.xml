@@ -40,9 +40,9 @@
     <string name="user_id_title">User ID</string>
     <string name="user_id_key">user_id</string>
     <string name="title_activity_tab">TabActivity</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_home">News</string>
+    <string name="title_dashboard">Send Money</string>
+    <string name="title_notifications">Get Money</string>
     <string name="news_title1">Btpn Only a Finger away</string>
     <string name="news_desc1">Are you searching your token all the time?, keep forgeting your password ?, phone is too small to write on ?, now you can use your fingerprint instead of using token, now you Always Carry, Always Remember, Always Easy</string>
     <string name="news_date1">25 januari 2018</string>

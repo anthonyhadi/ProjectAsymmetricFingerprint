@@ -55,7 +55,8 @@
             android:theme="@style/AppTheme.Dark" />
         <activity
             android:name=".TabActivity"
-            android:label="@string/title_activity_tab"></activity>
+            android:label="@string/title_activity_tab"
+            android:theme="@style/AppTheme.Dark" />
     </application>
 
 </manifest>

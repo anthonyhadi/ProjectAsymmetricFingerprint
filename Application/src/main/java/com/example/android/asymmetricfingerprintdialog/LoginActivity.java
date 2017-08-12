@@ -46,6 +46,7 @@ public class LoginActivity extends AppCompatActivity {
     @Bind(R.id.input_email) EditText _emailText;
     @Bind(R.id.input_password) EditText _passwordText;
     @Bind(R.id.btn_login) Button _loginButton;
+    @Bind(R.id.btn_login_finger) Button _loginFingerButton;
     @Bind(R.id.link_signup) TextView _signupLink;
     ProgressDialog progressDialog;
 
@@ -204,6 +205,14 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        _loginFingerButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                loginFinger();
+            }
+        });
+
         _signupLink.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -247,6 +256,24 @@ public class LoginActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                     }
                 }, 1000);
+    }
+
+    public void loginFinger() {
+        Log.d(TAG, "LoginFinger");
+
+        if (!validate()) {
+            onLoginFailed();
+            return;
+        }
+
+        _loginButton.setEnabled(false);
+
+        String email = _emailText.getText().toString();
+        String password = _passwordText.getText().toString();
+
+        // TODO: open fingerprint dialog and call /verify on server.
+
+
     }
 
 
