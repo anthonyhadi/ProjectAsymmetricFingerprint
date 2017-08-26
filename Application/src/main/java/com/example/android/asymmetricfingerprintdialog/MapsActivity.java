@@ -11,7 +11,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
@@ -19,6 +21,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.OvershootInterpolator;
 import android.widget.Toast;
 
@@ -26,6 +29,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.arlib.floatingsearchview.FloatingSearchView;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
@@ -46,6 +50,13 @@ import com.google.android.gms.location.LocationListener;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 import butterknife.Bind;
 
 public class MapsActivity extends AppCompatActivity
@@ -62,14 +73,78 @@ public class MapsActivity extends AppCompatActivity
     Location mLastLocation;
     Marker mCurrLocationMarker;
     FloatingActionMenu menu;
+    FloatingActionMenu menu3;
     FloatingActionButton offerGoodsBtn;
     FloatingActionButton offerServicesBtn;
+    FloatingSearchView mSearchView;
+
+    FloatingActionButton searchMoneyBtn;
+    FloatingActionButton searchServicesBtn;
+    FloatingActionButton searchGoodsBtn;
+
 
     double latInitial = -6.174668;
     double lngInitial = 106.827126;
     float zoomInitial = 15.0f;
     double latCurr = latInitial;
     double lngCurr = lngInitial;
+
+    String type;
+    JSONObject obj = null;
+    String searchKey;
+
+    private class SearchTask extends AsyncTask<JSONObject, Integer, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(JSONObject... params) {
+            try {
+                URL url = new URL("http://182.16.165.81:8080/main/getOfferByLatLng");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setRequestProperty("Accept", "application/json");
+
+                OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                wr.write(params[0].toString());
+                wr.close();
+
+                InputStream stream = urlConnection.getInputStream();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line + "\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                String jsonString = buffer.toString();
+
+                JSONArray json = new JSONArray(jsonString);
+                urlConnection.disconnect();
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Boolean.FALSE;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                // success
+            } else {
+                // failed
+            }
+        }
+    }
 
     private void createCustomAnimation() {
         AnimatorSet set = new AnimatorSet();
@@ -102,8 +177,7 @@ public class MapsActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
@@ -114,6 +188,9 @@ public class MapsActivity extends AppCompatActivity
         menu.setClosedOnTouchOutside(true);
         createCustomAnimation();
 
+        menu3 = (FloatingActionMenu) findViewById(R.id.menu3);
+        menu3.setClosedOnTouchOutside(true);
+
         offerGoodsBtn = (FloatingActionButton) findViewById(R.id.button1);
         final Context context = this;
         offerGoodsBtn.setOnClickListener(new View.OnClickListener() {
@@ -123,9 +200,9 @@ public class MapsActivity extends AppCompatActivity
 //                        ContextCompat.getColor(context, R.color.warning_color),
 //                        ContextCompat.getColor(context, R.color.transparent));
 //                offerGoodsBtn.setLabelTextColor(ContextCompat.getColor(context, R.color.black));
-                Intent intent = new Intent(getApplicationContext(),OfferGoodActivity.class);
-                intent.putExtra("LAT_CURR", latCurr+"");
-                intent.putExtra("LNG_CURR", lngCurr+"");
+                Intent intent = new Intent(getApplicationContext(), OfferGoodActivity.class);
+                intent.putExtra("LAT_CURR", latCurr + "");
+                intent.putExtra("LNG_CURR", lngCurr + "");
                 startActivity(intent);
                 finish();
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
@@ -136,39 +213,116 @@ public class MapsActivity extends AppCompatActivity
         offerServicesBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),OfferServiceActivity.class);
+                Intent intent = new Intent(getApplicationContext(), OfferServiceActivity.class);
                 startActivity(intent);
                 finish();
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             }
         });
 
-        FloatingActionButton searchGoodsBtn = (FloatingActionButton) findViewById(R.id.button12);
-        searchGoodsBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FloatingActionMenu menu3 = (FloatingActionMenu) findViewById(R.id.menu3);
-                menu3.getMenuIconView().setImageResource(R.drawable.goblin);
-            }
-        });
-
-        FloatingActionButton searchServicesBtn = (FloatingActionButton) findViewById(R.id.button22);
-        searchServicesBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FloatingActionMenu menu3 = (FloatingActionMenu) findViewById(R.id.menu3);
-                menu3.getMenuIconView().setImageResource(R.drawable.robot);
-            }
-        });
-
-        FloatingActionButton searchMoneyBtn = (FloatingActionButton) findViewById(R.id.button32);
+        searchMoneyBtn = (FloatingActionButton) findViewById(R.id.button12);
         searchMoneyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FloatingActionMenu menu3 = (FloatingActionMenu) findViewById(R.id.menu3);
-                menu3.getMenuIconView().setImageResource(R.drawable.robot);
+                menu3.getMenuIconView().setImageResource(R.drawable.goblin);
+                menu3.close(true);
+                type = "uang";
+                if(obj != null) {
+                    try {
+                        obj.put("type", type);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                mSearchView.setVisibility(View.INVISIBLE);
             }
         });
+
+        searchServicesBtn = (FloatingActionButton) findViewById(R.id.button22);
+        searchServicesBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                menu3.getMenuIconView().setImageResource(R.drawable.robot);
+                menu3.close(true);
+                mSearchView.setVisibility(View.VISIBLE);
+                type = "jasa";
+                obj = new JSONObject();
+                try {
+                    obj.put("type", type);
+                    obj.put("lat", latCurr + "");
+                    obj.put("lng", lngCurr + "");
+                    obj.put("radius", "1");
+                    obj.put("searchKey", searchKey);
+                    new SearchTask().execute(obj);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        searchGoodsBtn = (FloatingActionButton) findViewById(R.id.button32);
+        searchGoodsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                menu3.getMenuIconView().setImageResource(R.drawable.witch);
+                menu3.close(true);
+                mSearchView.setVisibility(View.VISIBLE);
+                type = "barang";
+                obj = new JSONObject();
+                try {
+                    obj.put("type", type);
+                    obj.put("lat", latCurr + "");
+                    obj.put("lng", lngCurr + "");
+                    obj.put("radius", "1");
+                    obj.put("searchKey", searchKey);
+                    new SearchTask().execute(obj);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        mSearchView = (FloatingSearchView) findViewById(R.id.floating_search_view);
+        mSearchView.setOnQueryChangeListener(new FloatingSearchView.OnQueryChangeListener() {
+            @Override
+            public void onSearchTextChanged(String oldQuery, final String newQuery) {
+                searchKey = newQuery;
+                if (newQuery.length() >= 3) {
+                    obj = new JSONObject();
+                    try {
+                        obj.put("type", type);
+                        obj.put("searchKey", newQuery);
+                        obj.put("lat", latCurr + "");
+                        obj.put("lng", lngCurr + "");
+                        obj.put("radius", "1");
+
+                        new SearchTask().execute(obj);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        });
+
+        final Handler h = new Handler();
+        h.postDelayed(new Runnable() {
+            private long time = 0;
+
+            @Override
+            public void run() {
+                // do stuff then
+                if(obj != null) {
+                    new SearchTask().execute(obj);
+                }
+                // can call h again after work!
+                time += 1000;
+                Log.d("TimerExample", "Going for... " + time);
+                h.postDelayed(this, 1000);
+            }
+        }, 1000); // 1 second delay (takes millis)
     }
 
     @Override
@@ -182,9 +336,8 @@ public class MapsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap)
-    {
-        mGoogleMap=googleMap;
+    public void onMapReady(GoogleMap googleMap) {
+        mGoogleMap = googleMap;
         mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
         //Initialize Google Play Services
@@ -200,8 +353,7 @@ public class MapsActivity extends AppCompatActivity
                 //Request Location Permission
                 checkLocationPermission();
             }
-        }
-        else {
+        } else {
             buildGoogleApiClient();
             mGoogleMap.setMyLocationEnabled(false);
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latInitial, lngInitial), zoomInitial));
@@ -231,14 +383,15 @@ public class MapsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onConnectionSuspended(int i) {}
+    public void onConnectionSuspended(int i) {
+    }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {}
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+    }
 
     @Override
-    public void onLocationChanged(Location location)
-    {
+    public void onLocationChanged(Location location) {
         mLastLocation = location;
         if (mCurrLocationMarker != null) {
             mCurrLocationMarker.remove();
@@ -259,6 +412,7 @@ public class MapsActivity extends AppCompatActivity
     }
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -279,7 +433,7 @@ public class MapsActivity extends AppCompatActivity
                                 //Prompt the user once explanation has been shown
                                 ActivityCompat.requestPermissions(MapsActivity.this,
                                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                        MY_PERMISSIONS_REQUEST_LOCATION );
+                                        MY_PERMISSIONS_REQUEST_LOCATION);
                             }
                         })
                         .create()
@@ -290,7 +444,7 @@ public class MapsActivity extends AppCompatActivity
                 // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION );
+                        MY_PERMISSIONS_REQUEST_LOCATION);
             }
         }
     }
