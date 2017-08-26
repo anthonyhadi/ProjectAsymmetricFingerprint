@@ -46,13 +46,18 @@ import com.google.android.gms.location.LocationListener;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.Bind;
 
 public class MapsActivity extends AppCompatActivity
         implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener,
+        GoogleMap.OnCameraMoveStartedListener,
+        GoogleMap.OnCameraMoveListener {
     private static final String TAG = "MapsActivity";
 
     GoogleMap mGoogleMap;
@@ -64,12 +69,16 @@ public class MapsActivity extends AppCompatActivity
     FloatingActionMenu menu;
     FloatingActionButton offerGoodsBtn;
     FloatingActionButton offerServicesBtn;
+    FloatingActionButton compassBtn;
 
     double latInitial = -6.174668;
     double lngInitial = 106.827126;
     float zoomInitial = 15.0f;
     double latCurr = latInitial;
     double lngCurr = lngInitial;
+
+    boolean isTracked = true;
+    List<Marker> markerList = new ArrayList<>();
 
     private void createCustomAnimation() {
         AnimatorSet set = new AnimatorSet();
@@ -169,6 +178,33 @@ public class MapsActivity extends AppCompatActivity
                 menu3.getMenuIconView().setImageResource(R.drawable.robot);
             }
         });
+
+        compassBtn = (FloatingActionButton) findViewById(R.id.compass);
+        compassBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mCurrLocationMarker != null) {
+                    mCurrLocationMarker.remove();
+                }
+
+                //Place current location marker
+                BitmapDescriptor meIcon = BitmapDescriptorFactory.fromResource(R.drawable.wizard);
+                LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                MarkerOptions markerOptions = new MarkerOptions();
+                markerOptions.position(latLng);
+                markerOptions.title("me");
+                markerOptions.icon(meIcon);
+                mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
+
+                //move map camera
+                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                isTracked = true;
+                compassBtn.setEnabled(false);
+            }
+        });
+        // initial isTracked is true
+        if (isTracked) compassBtn.setEnabled(false);
+
     }
 
     @Override
@@ -186,6 +222,8 @@ public class MapsActivity extends AppCompatActivity
     {
         mGoogleMap=googleMap;
         mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mGoogleMap.setOnCameraMoveStartedListener(this);
+        mGoogleMap.setOnCameraMoveListener(this);
 
         //Initialize Google Play Services
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -253,9 +291,11 @@ public class MapsActivity extends AppCompatActivity
         markerOptions.icon(meIcon);
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
 
-        //move map camera
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        if (isTracked) {
+            //move map camera on when tracked
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
 
+        }
     }
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
@@ -331,4 +371,20 @@ public class MapsActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onCameraMove() {
+        //isTracked = false;
+        LatLng target = mGoogleMap.getCameraPosition().target;
+        latCurr = target.latitude;
+        lngCurr = target.longitude;
+        //compassBtn.setEnabled(true);
+    }
+
+    @Override
+    public void onCameraMoveStarted(int reason) {
+        if (reason == REASON_GESTURE) {
+            isTracked = false;
+            compassBtn.setEnabled(true);
+        }
+    }
 }

@@ -39,7 +39,7 @@
         fab:menu_labels_ellipsize="end"
         fab:menu_labels_singleLine="true"
         fab:menu_labels_position="right"
-        fab:menu_icon="@drawable/megaphone"
+        fab:menu_icon="@drawable/goods"
         fab:menu_openDirection="down"
         fab:menu_fab_size="mini">
 
@@ -47,7 +47,7 @@
             android:id="@+id/button12"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/goblin"
+            android:src="@drawable/money"
             fab:fab_size="mini"
             fab:fab_label="Uang" />
 
@@ -55,7 +55,7 @@
             android:id="@+id/button22"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/robot"
+            android:src="@drawable/service"
             fab:fab_size="mini"
             fab:fab_label="Jasa" />
 
@@ -63,7 +63,7 @@
             android:id="@+id/button32"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/witch"
+            android:src="@drawable/goods"
             fab:fab_size="mini"
             fab:fab_label="Barang" />
 
@@ -76,7 +76,7 @@
         android:layout_gravity="bottom|left"
         android:layout_marginBottom="10dp"
         android:layout_marginLeft="10dp"
-        android:src="@drawable/yeti"
+        android:src="@drawable/track"
         fab:fab_label="Menu item 1" />
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/menu"
@@ -95,7 +95,7 @@
             android:id="@+id/button1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/goblin"
+            android:src="@drawable/goods"
             fab:fab_size="mini"
             fab:fab_label="Penawaran Barang" />
 
@@ -103,7 +103,7 @@
             android:id="@+id/button2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/robot"
+            android:src="@drawable/service"
             fab:fab_size="mini"
             fab:fab_label="Penawaran Jasa" />
 
@@ -119,7 +119,7 @@
         fab:menu_labels_ellipsize="end"
         fab:menu_labels_singleLine="true"
         fab:menu_labels_position="right"
-        fab:menu_icon="@drawable/wizard">
+        fab:menu_icon="@drawable/profile">
     </com.github.clans.fab.FloatingActionMenu>
 
 </FrameLayout>
