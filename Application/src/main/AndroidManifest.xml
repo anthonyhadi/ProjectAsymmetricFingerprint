@@ -79,7 +79,7 @@
         <activity
             android:name=".MapsActivity"
             android:label="@string/title_activity_maps"
-            android:theme="@style/AppTheme.Light"></activity>
+            android:theme="@style/AppTheme.Light" />
         <activity
             android:name=".OfferGoodActivity"
             android:theme="@style/AppTheme.Dark" />
