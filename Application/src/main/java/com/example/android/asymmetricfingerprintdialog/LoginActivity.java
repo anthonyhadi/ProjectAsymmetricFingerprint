@@ -434,8 +434,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onLoginSuccess() {
+        userId = _emailText.getText().toString();
         _loginButton.setEnabled(true);
         Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
+        intent.putExtra("USER_ID", userId);
         startActivityForResult(intent, SUCCESS_SIGNIN);
         finish();
         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);

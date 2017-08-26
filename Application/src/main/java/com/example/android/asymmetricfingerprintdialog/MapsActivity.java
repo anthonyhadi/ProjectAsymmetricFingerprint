@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -77,6 +78,7 @@ public class MapsActivity extends AppCompatActivity
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     Marker mCurrLocationMarker;
+    Marker mTargetMarker;
     FloatingActionMenu menu;
     FloatingActionMenu menu3;
     FloatingActionButton offerGoodsBtn;
@@ -88,6 +90,10 @@ public class MapsActivity extends AppCompatActivity
     FloatingActionButton searchServicesBtn;
     FloatingActionButton searchGoodsBtn;
 
+    String myAvatar = "cyclops";
+    String myTarget = "goal";
+    String myTitle = "me";
+    String userId = "";
 
     double latInitial = -6.174668;
     double lngInitial = 106.827126;
@@ -155,6 +161,61 @@ public class MapsActivity extends AppCompatActivity
         }
     }
 
+    private class GetProfileTask extends AsyncTask<JSONObject, Integer, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(JSONObject... params) {
+            try {
+                URL url = new URL("http://182.16.165.81:8080/main/getProfile");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setRequestProperty("Accept", "application/json");
+
+                OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                wr.write(params[0].toString());
+                wr.close();
+
+                InputStream stream = urlConnection.getInputStream();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line + "\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                String jsonString = buffer.toString();
+
+                JSONObject json = new JSONObject(jsonString);
+                urlConnection.disconnect();
+                myAvatar = json.getString("avatar");
+                myTitle = json.getString("title");
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Boolean.FALSE;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                // success
+            } else {
+                // failed
+            }
+        }
+    }
+
     private void createCustomAnimation() {
         AnimatorSet set = new AnimatorSet();
 
@@ -185,6 +246,34 @@ public class MapsActivity extends AppCompatActivity
         menu.setIconToggleAnimatorSet(set);
     }
 
+    protected void updateMyMarker(LatLng latLng) {
+        if (mCurrLocationMarker != null) {
+            mCurrLocationMarker.remove();
+        }
+        int avatarId = getResources().getIdentifier(myAvatar, "drawable", getPackageName());
+        //Place current location marker
+        BitmapDescriptor meIcon = BitmapDescriptorFactory.fromResource(avatarId);
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title(myTitle);
+        markerOptions.icon(meIcon);
+        mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
+    }
+
+    protected void updateMyTargetMarker(LatLng latLng) {
+        if (mTargetMarker != null) {
+            mTargetMarker.remove();
+        }
+        int avatarId = getResources().getIdentifier(myTarget, "drawable", getPackageName());
+        //Place current location marker
+        BitmapDescriptor meIcon = BitmapDescriptorFactory.fromResource(avatarId);
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title("target");
+        markerOptions.icon(meIcon);
+        mTargetMarker = mGoogleMap.addMarker(markerOptions);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -192,6 +281,11 @@ public class MapsActivity extends AppCompatActivity
 
         mapFrag = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFrag.getMapAsync(this);
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            userId = extras.getString("USER_ID");
+        }
 
         menu = (FloatingActionMenu) findViewById(R.id.menu);
         menu.setClosedOnTouchOutside(true);
@@ -337,27 +431,27 @@ public class MapsActivity extends AppCompatActivity
         compassBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mCurrLocationMarker != null) {
-                    mCurrLocationMarker.remove();
-                }
-
-                //Place current location marker
-                BitmapDescriptor meIcon = BitmapDescriptorFactory.fromResource(R.drawable.wizard);
                 LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.position(latLng);
-                markerOptions.title("me");
-                markerOptions.icon(meIcon);
-                mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
+                updateMyMarker(latLng);
 
                 //move map camera
                 mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                 isTracked = true;
                 compassBtn.setEnabled(false);
+                if (mTargetMarker != null) {
+                    mTargetMarker.remove();
+                }
             }
         });
         // initial isTracked is true
         if (isTracked) compassBtn.setEnabled(false);
+        JSONObject obj2 = new JSONObject();
+        try {
+            obj2.put("userId", userId);
+            new GetProfileTask().execute(obj2);
+        } catch (Exception e) {
+
+        }
 
     }
 
@@ -431,19 +525,9 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
-        if (mCurrLocationMarker != null) {
-            mCurrLocationMarker.remove();
-        }
-
         //Place current location marker
-        BitmapDescriptor meIcon = BitmapDescriptorFactory.fromResource(R.drawable.wizard);
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("me");
-        markerOptions.icon(meIcon);
-        mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
-
+        updateMyMarker(latLng);
         if (isTracked) {
             //move map camera on when tracked
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -531,6 +615,9 @@ public class MapsActivity extends AppCompatActivity
         LatLng target = mGoogleMap.getCameraPosition().target;
         latCurr = target.latitude;
         lngCurr = target.longitude;
+        if (!isTracked) {
+            updateMyTargetMarker(target);
+        }
         //compassBtn.setEnabled(true);
     }
 
