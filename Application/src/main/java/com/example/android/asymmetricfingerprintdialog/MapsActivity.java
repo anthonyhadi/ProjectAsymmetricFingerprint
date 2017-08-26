@@ -6,6 +6,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -15,6 +16,7 @@ import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.Toast;
@@ -23,6 +25,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -49,6 +52,7 @@ public class MapsActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
+    private static final String TAG = "MapsActivity";
 
     GoogleMap mGoogleMap;
     SupportMapFragment mapFrag;
@@ -57,6 +61,7 @@ public class MapsActivity extends AppCompatActivity
     Location mLastLocation;
     Marker mCurrLocationMarker;
     FloatingActionMenu menu;
+    FloatingActionButton offerGoodsBtn;
 
     double latInitial = -6.174668;
     double lngInitial = 106.827126;
@@ -104,6 +109,18 @@ public class MapsActivity extends AppCompatActivity
         menu = (FloatingActionMenu) findViewById(R.id.menu);
         menu.setClosedOnTouchOutside(true);
         createCustomAnimation();
+
+        offerGoodsBtn = (FloatingActionButton) findViewById(R.id.button1);
+        final Context context = this;
+        offerGoodsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                offerGoodsBtn.setLabelColors(ContextCompat.getColor(context, R.color.primary),
+                        ContextCompat.getColor(context, R.color.warning_color),
+                        ContextCompat.getColor(context, R.color.transparent));
+                offerGoodsBtn.setLabelTextColor(ContextCompat.getColor(context, R.color.black));
+            }
+        });
     }
 
     @Override
