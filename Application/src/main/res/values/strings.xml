@@ -84,5 +84,9 @@
         <item>Pinjam</item>
         <item>Jual</item>
     </string-array>
+
+    <string-array name="category_jasa_array">
+        <item>Travel</item>
+    </string-array>
     <string name="title_activity_maps2">Map</string>
 </resources>

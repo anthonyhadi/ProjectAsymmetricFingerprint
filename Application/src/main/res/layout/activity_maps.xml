@@ -247,19 +247,27 @@
             fab:fab_label="Penawaran Jasa" />
 
     </com.github.clans.fab.FloatingActionMenu>
-    <com.github.clans.fab.FloatingActionMenu
-        android:id="@+id/menu2"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:paddingRight="10dp"
-        android:paddingBottom="85dp"
-        android:paddingLeft="10dp"
-        fab:menu_labels_ellipsize="end"
-        fab:menu_labels_singleLine="true"
-        fab:menu_labels_position="right"
-        fab:menu_icon="@drawable/profile">
-    </com.github.clans.fab.FloatingActionMenu>
+    <com.github.clans.fab.FloatingActionButton
+        android:id="@+id/profile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_marginBottom="90dp"
+        android:layout_marginLeft="10dp"
+        android:src="@drawable/profile"
+        fab:fab_label="Menu item 1" />
+
+    <com.github.clans.fab.FloatingActionButton
+        android:id="@+id/pinjam"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:layout_marginLeft="80dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/profile"
+        android:visibility="invisible"
+        fab:fab_size="mini"
+        fab:fab_label="Menu item 1" />
 
 
 
