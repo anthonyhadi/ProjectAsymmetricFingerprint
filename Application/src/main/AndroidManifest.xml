@@ -86,6 +86,12 @@
         <activity
             android:name=".OfferServiceActivity"
             android:theme="@style/AppTheme.Dark" />
+        <activity
+            android:name=".ProfileActivity"
+            android:theme="@style/AppTheme.Dark" />
+        <activity
+            android:name=".PinjamActivity"
+            android:theme="@style/AppTheme.Dark" />
     </application>
 
 </manifest>

@@ -6,6 +6,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -84,6 +85,8 @@ public class MapsActivity extends AppCompatActivity
     FloatingActionButton offerGoodsBtn;
     FloatingActionButton offerServicesBtn;
     FloatingActionButton compassBtn;
+    FloatingActionButton profileBtn;
+    FloatingActionButton pinjamBtn;
     FloatingSearchView mSearchView;
 
     FloatingActionButton searchMoneyBtn;
@@ -106,7 +109,81 @@ public class MapsActivity extends AppCompatActivity
 
     String type;
     JSONObject obj = null;
+    JSONObject objProfile = null;
     String searchKey;
+
+    ProgressDialog progressDialog;
+
+    private class ProfileTask extends AsyncTask<JSONObject, Integer, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(JSONObject... params) {
+            try {
+                URL url = new URL("http://182.16.165.81:8080/main/getProfile");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setChunkedStreamingMode(0);
+                urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                urlConnection.setRequestProperty("Accept", "application/json");
+
+                OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
+                wr.write(params[0].toString());
+                wr.close();
+
+                InputStream stream = urlConnection.getInputStream();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+                StringBuffer buffer = new StringBuffer();
+                String line = "";
+
+                while ((line = reader.readLine()) != null) {
+                    buffer.append(line + "\n");
+                    Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
+
+                }
+
+                String jsonString = buffer.toString();
+
+                objProfile = new JSONObject(jsonString);
+                urlConnection.disconnect();
+                return Boolean.TRUE;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Boolean.FALSE;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+
+        }
+
+        protected void onPostExecute(Boolean result) {
+            progressDialog.dismiss();
+            if (result) {
+                // success
+                try {
+                    Intent intent = new Intent(getApplicationContext(), ProfileActivity.class);
+                    intent.putExtra("userId", objProfile.get("userId").toString());
+                    intent.putExtra("email", objProfile.get("email").toString());
+                    intent.putExtra("mobile", objProfile.get("mobile").toString());
+                    intent.putExtra("exp", objProfile.get("exp").toString());
+                    intent.putExtra("title", objProfile.get("title").toString());
+                    intent.putExtra("avatar", objProfile.get("avatar").toString());
+                    intent.putExtra("nextExp", objProfile.get("nextExp").toString());
+                    startActivity(intent);
+                    finish();
+                    overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // failed
+                Toast.makeText(getBaseContext(), "Gagal memuat profil",
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 
     private class SearchTask extends AsyncTask<JSONObject, Integer, Boolean> {
 
@@ -330,7 +407,7 @@ public class MapsActivity extends AppCompatActivity
                 menu3.getMenuIconView().setImageResource(R.drawable.goblin);
                 menu3.close(true);
                 type = "uang";
-                if(obj != null) {
+                if (obj != null) {
                     try {
                         obj.put("type", type);
                     } catch (Exception e) {
@@ -338,6 +415,7 @@ public class MapsActivity extends AppCompatActivity
                     }
                 }
                 mSearchView.setVisibility(View.INVISIBLE);
+                pinjamBtn.setVisibility(View.VISIBLE);
             }
         });
 
@@ -348,6 +426,7 @@ public class MapsActivity extends AppCompatActivity
                 menu3.getMenuIconView().setImageResource(R.drawable.robot);
                 menu3.close(true);
                 mSearchView.setVisibility(View.VISIBLE);
+                pinjamBtn.setVisibility(View.INVISIBLE);
                 type = "jasa";
                 obj = new JSONObject();
                 try {
@@ -371,6 +450,7 @@ public class MapsActivity extends AppCompatActivity
                 menu3.getMenuIconView().setImageResource(R.drawable.witch);
                 menu3.close(true);
                 mSearchView.setVisibility(View.VISIBLE);
+                pinjamBtn.setVisibility(View.INVISIBLE);
                 type = "barang";
                 obj = new JSONObject();
                 try {
@@ -384,6 +464,17 @@ public class MapsActivity extends AppCompatActivity
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }
+        });
+
+        pinjamBtn = (FloatingActionButton) findViewById(R.id.pinjam);
+        pinjamBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), PinjamActivity.class);
+                startActivity(intent);
+                finish();
+                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             }
         });
 
@@ -417,7 +508,7 @@ public class MapsActivity extends AppCompatActivity
             @Override
             public void run() {
                 // do stuff then
-                if(obj != null) {
+                if (obj != null) {
                     new SearchTask().execute(obj);
                 }
                 // can call h again after work!
@@ -443,6 +534,7 @@ public class MapsActivity extends AppCompatActivity
                 }
             }
         });
+
         // initial isTracked is true
         if (isTracked) compassBtn.setEnabled(false);
         JSONObject obj2 = new JSONObject();
@@ -453,6 +545,24 @@ public class MapsActivity extends AppCompatActivity
 
         }
 
+        profileBtn = (FloatingActionButton) findViewById(R.id.profile);
+        profileBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressDialog = new ProgressDialog(MapsActivity.this,
+                        R.style.AppTheme_Dark_Dialog);
+                progressDialog.setIndeterminate(true);
+                progressDialog.setMessage("Please wait...");
+                progressDialog.show();
+                try {
+                    JSONObject obj3 = new JSONObject();
+                    obj3.put("userId", userId);
+                    new ProfileTask().execute(obj3);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override
