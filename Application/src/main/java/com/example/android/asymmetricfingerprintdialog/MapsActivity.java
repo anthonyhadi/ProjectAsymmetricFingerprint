@@ -24,6 +24,11 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.OvershootInterpolator;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -69,7 +74,7 @@ public class MapsActivity extends AppCompatActivity
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
         GoogleMap.OnCameraMoveStartedListener,
-        GoogleMap.OnCameraMoveListener {
+        GoogleMap.OnCameraMoveListener, GoogleMap.OnMarkerClickListener {
     private static final String TAG = "MapsActivity";
 
     GoogleMap mGoogleMap;
@@ -89,6 +94,8 @@ public class MapsActivity extends AppCompatActivity
     FloatingActionButton searchMoneyBtn;
     FloatingActionButton searchServicesBtn;
     FloatingActionButton searchGoodsBtn;
+    EditText chatBox;
+    EditText atmBox;
 
     String myAvatar = "cyclops";
     String myTarget = "goal";
@@ -103,10 +110,50 @@ public class MapsActivity extends AppCompatActivity
 
     boolean isTracked = true;
     List<Marker> markerList = new ArrayList<>();
+    JSONArray jsonMarkerArray;
 
     String type;
     JSONObject obj = null;
     String searchKey;
+
+    private RelativeLayout chatContainer;
+    private RelativeLayout atmContainer;
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        if (marker.getTag().toString().startsWith("me")) {
+            //Toast.makeText(getBaseContext(), "its me", Toast.LENGTH_LONG).show();
+        } else if (marker.getTag().toString().startsWith("uang_atmbca")) {
+            //Toast.makeText(getBaseContext(), "its uang_atmbca", Toast.LENGTH_LONG).show();
+            String str = marker.getTag().toString().substring("uang_atmbca_".length());
+            atmContainer.setVisibility(RelativeLayout.VISIBLE);
+            chatContainer.setVisibility(RelativeLayout.GONE);
+            atmBox.setText(str);
+        } else if (marker.getTag().toString().startsWith("barang_pinjam")) {
+            //Toast.makeText(getBaseContext(), "its uang_atmbca", Toast.LENGTH_LONG).show();
+            String str = marker.getTag().toString().substring("barang_pinjam_".length());
+            atmContainer.setVisibility(RelativeLayout.GONE);
+            chatContainer.setVisibility(RelativeLayout.VISIBLE);
+            chatBox.setText(str);
+        } else if (marker.getTag().toString().startsWith("barang_jual")) {
+            //Toast.makeText(getBaseContext(), "its uang_atmbca", Toast.LENGTH_LONG).show();
+            String str = marker.getTag().toString().substring("barang_jual_".length());
+            atmContainer.setVisibility(RelativeLayout.GONE);
+            chatContainer.setVisibility(RelativeLayout.VISIBLE);
+            chatBox.setText(str);
+        } else if (marker.getTag().toString().startsWith("jasa_travel")) {
+            //Toast.makeText(getBaseContext(), "its uang_atmbca", Toast.LENGTH_LONG).show();
+            String str = marker.getTag().toString().substring("jasa_travel_".length());
+            atmContainer.setVisibility(RelativeLayout.GONE);
+            chatContainer.setVisibility(RelativeLayout.VISIBLE);
+            chatBox.setText(str);
+        } else {
+            //Toast.makeText(getBaseContext(), "its are : " + marker.getTag().toString(), Toast.LENGTH_LONG).show();
+            atmContainer.setVisibility(RelativeLayout.GONE);
+            chatContainer.setVisibility(RelativeLayout.VISIBLE);
+        }
+        return false;
+    }
 
     private class SearchTask extends AsyncTask<JSONObject, Integer, Boolean> {
 
@@ -139,7 +186,8 @@ public class MapsActivity extends AppCompatActivity
 
                 String jsonString = buffer.toString();
 
-                JSONArray json = new JSONArray(jsonString);
+                jsonMarkerArray = new JSONArray(jsonString);
+                updateMarkerList();
                 urlConnection.disconnect();
                 return true;
             } catch (Exception e) {
@@ -246,7 +294,41 @@ public class MapsActivity extends AppCompatActivity
         menu.setIconToggleAnimatorSet(set);
     }
 
+    protected void updateMarkerList() {
+        for (Marker marker : markerList) {
+            marker.remove();
+        }
+        markerList.clear();
+
+        try {
+            if (jsonMarkerArray != null) {
+                for (int i = 0; i < jsonMarkerArray.length(); i++) {
+                    JSONObject jsonObject = jsonMarkerArray.getJSONObject(i);
+                    int avatarId = getResources().getIdentifier(jsonObject.getString("type") + "_" + jsonObject.getString("category"), "drawable", getPackageName());
+                    //Place current location marker
+                    BitmapDescriptor meIcon = BitmapDescriptorFactory.fromResource(avatarId);
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    LatLng latLng = new LatLng(Double.parseDouble(jsonObject.getString("lat")), Double.parseDouble(jsonObject.getString("lng")));
+                    markerOptions.position(latLng);
+                    //markerOptions.title(jsonObject.getString("name"));
+                    markerOptions.icon(meIcon);
+                    Marker marker = mGoogleMap.addMarker(markerOptions);
+                    if (jsonObject.getString("type").equals("uang")) {
+                        marker.setTag(jsonObject.getString("type") + "_" + jsonObject.getString("category") + "_" + jsonObject.getString("desc"));
+                    } else {
+                        marker.setTag(jsonObject.getString("type") + "_" + jsonObject.getString("category") + "_" + jsonObject.getString("desc") + " (Rp. " + jsonObject.get("cost") + ")");
+                    }
+                    markerList.add(marker);
+                }
+            }
+        } catch (Exception e) {
+
+        }
+
+    }
+
     protected void updateMyMarker(LatLng latLng) {
+        //updateMarkerList();
         if (mCurrLocationMarker != null) {
             mCurrLocationMarker.remove();
         }
@@ -258,6 +340,7 @@ public class MapsActivity extends AppCompatActivity
         markerOptions.title(myTitle);
         markerOptions.icon(meIcon);
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
+        mCurrLocationMarker.setTag("me");
     }
 
     protected void updateMyTargetMarker(LatLng latLng) {
@@ -327,15 +410,25 @@ public class MapsActivity extends AppCompatActivity
         searchMoneyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                menu3.getMenuIconView().setImageResource(R.drawable.goblin);
+                menu3.getMenuIconView().setImageResource(R.drawable.money);
                 menu3.close(true);
                 type = "uang";
-                if(obj != null) {
-                    try {
-                        obj.put("type", type);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                obj = new JSONObject();
+                try {
+                    obj.put("type", type);
+                    obj.put("lat", latCurr + "");
+                    obj.put("lng", lngCurr + "");
+                    obj.put("radius", "1");
+                    obj.put("searchKey", searchKey);
+                    new SearchTask().execute(obj);
+                    new android.os.Handler().postDelayed(
+                            new Runnable() {
+                                public void run() {
+                                    updateMarkerList();
+                                }
+                            }, 1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 mSearchView.setVisibility(View.INVISIBLE);
             }
@@ -345,7 +438,7 @@ public class MapsActivity extends AppCompatActivity
         searchServicesBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                menu3.getMenuIconView().setImageResource(R.drawable.robot);
+                menu3.getMenuIconView().setImageResource(R.drawable.service);
                 menu3.close(true);
                 mSearchView.setVisibility(View.VISIBLE);
                 type = "jasa";
@@ -357,7 +450,12 @@ public class MapsActivity extends AppCompatActivity
                     obj.put("radius", "1");
                     obj.put("searchKey", searchKey);
                     new SearchTask().execute(obj);
-
+                    new android.os.Handler().postDelayed(
+                            new Runnable() {
+                                public void run() {
+                                    updateMarkerList();
+                                }
+                            }, 1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -368,7 +466,7 @@ public class MapsActivity extends AppCompatActivity
         searchGoodsBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                menu3.getMenuIconView().setImageResource(R.drawable.witch);
+                menu3.getMenuIconView().setImageResource(R.drawable.goods);
                 menu3.close(true);
                 mSearchView.setVisibility(View.VISIBLE);
                 type = "barang";
@@ -380,7 +478,12 @@ public class MapsActivity extends AppCompatActivity
                     obj.put("radius", "1");
                     obj.put("searchKey", searchKey);
                     new SearchTask().execute(obj);
-
+                    new android.os.Handler().postDelayed(
+                            new Runnable() {
+                                public void run() {
+                                    updateMarkerList();
+                                }
+                            }, 1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -396,12 +499,17 @@ public class MapsActivity extends AppCompatActivity
                     obj = new JSONObject();
                     try {
                         obj.put("type", type);
-                        obj.put("searchKey", newQuery);
+                        obj.put("searchKey", searchKey);
                         obj.put("lat", latCurr + "");
                         obj.put("lng", lngCurr + "");
                         obj.put("radius", "1");
-
                         new SearchTask().execute(obj);
+                        new android.os.Handler().postDelayed(
+                                new Runnable() {
+                                    public void run() {
+                                        updateMarkerList();
+                                    }
+                                }, 1000);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -409,16 +517,26 @@ public class MapsActivity extends AppCompatActivity
                 }
             }
         });
-
+/*
         final Handler h = new Handler();
+
         h.postDelayed(new Runnable() {
             private long time = 0;
 
             @Override
             public void run() {
                 // do stuff then
-                if(obj != null) {
+                obj = new JSONObject();
+                try {
+                    obj.put("type", type);
+                    obj.put("searchKey", searchKey);
+                    obj.put("lat", latCurr + "");
+                    obj.put("lng", lngCurr + "");
+                    obj.put("radius", "1");
+
                     new SearchTask().execute(obj);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 // can call h again after work!
                 time += 1000;
@@ -427,6 +545,7 @@ public class MapsActivity extends AppCompatActivity
             }
         }, 1000); // 1 second delay (takes millis)
 
+*/
         compassBtn = (FloatingActionButton) findViewById(R.id.compass);
         compassBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -452,7 +571,23 @@ public class MapsActivity extends AppCompatActivity
         } catch (Exception e) {
 
         }
+        chatContainer = (RelativeLayout) findViewById(R.id.chat);
+        atmContainer = (RelativeLayout) findViewById(R.id.atm);
+        chatBox = (EditText) findViewById(R.id.editText1);
+        atmBox = (EditText) findViewById(R.id.editText2);
 
+        Spinner spinner = (Spinner) findViewById(R.id.cash_spinner);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.cash_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+    }
+
+    public void onClose(View v) {
+        atmContainer.setVisibility(RelativeLayout.GONE);
+        chatContainer.setVisibility(RelativeLayout.GONE);
     }
 
     @Override
@@ -471,6 +606,7 @@ public class MapsActivity extends AppCompatActivity
         mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mGoogleMap.setOnCameraMoveStartedListener(this);
         mGoogleMap.setOnCameraMoveListener(this);
+        mGoogleMap.setOnMarkerClickListener(this);
 
         //Initialize Google Play Services
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -529,6 +665,8 @@ public class MapsActivity extends AppCompatActivity
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         updateMyMarker(latLng);
         if (isTracked) {
+            latCurr = latLng.latitude;
+            lngCurr = latLng.longitude;
             //move map camera on when tracked
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
 

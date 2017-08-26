@@ -74,6 +74,12 @@
         <item>5943445565</item>
     </string-array>
 
+    <string-array name="cash_array">
+        <item>Rp. 1.000.000</item>
+        <item>Send Cash</item>
+        <item>Request Cash</item>
+    </string-array>
+
     <string-array name="category_array">
         <item>Pinjam</item>
         <item>Jual</item>
