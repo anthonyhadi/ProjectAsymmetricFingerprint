@@ -56,7 +56,7 @@ public class VerifyActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(JSONObject... params) {
             try {
-                URL url = new URL("http://192.168.110.154:6969/hackathon/enroll");
+                URL url = new URL("http://182.16.165.81:8080/main/enroll");
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setDoOutput(true);
                 urlConnection.setChunkedStreamingMode(0);

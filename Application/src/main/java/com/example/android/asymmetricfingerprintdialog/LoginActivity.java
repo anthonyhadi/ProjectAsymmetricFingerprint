@@ -88,7 +88,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(JSONObject... params) {
             try {
-                URL url = new URL("http://192.168.110.154:6969/hackathon/verify");
+                URL url = new URL("http://182.16.165.81:8080/main/verify");
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setDoOutput(true);
                 urlConnection.setChunkedStreamingMode(0);
@@ -134,9 +134,12 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(Boolean result) {
             if (result) {
                 // success
+                onLoginSuccess();
                 progressDialog.dismiss();
             } else {
                 // failed
+                onLoginFailed();
+                progressDialog.dismiss();
             }
         }
     }
@@ -146,7 +149,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(JSONObject... params) {
             try {
-                URL url = new URL("http://192.168.110.154:6969/hackathon/verify");
+                URL url = new URL("http://182.16.165.81:8080/main/verify");
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setDoOutput(true);
                 urlConnection.setChunkedStreamingMode(0);
@@ -364,7 +367,7 @@ public class LoginActivity extends AppCompatActivity {
 
         _loginButton.setEnabled(false);
 
-        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
+        progressDialog = new ProgressDialog(LoginActivity.this,
                 R.style.AppTheme_Dark_Dialog);
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage("Authenticating...");
@@ -374,16 +377,6 @@ public class LoginActivity extends AppCompatActivity {
         String password = _passwordText.getText().toString();
 
         // TODO: Implement your own authentication logic here.
-
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        // On complete call either onLoginSuccess or onLoginFailed
-                        onLoginSuccess();
-                        // onLoginFailed();
-                        progressDialog.dismiss();
-                    }
-                }, 1000);
         JSONObject obj = new JSONObject();
         try {
             obj.put("userId", email);
@@ -442,7 +435,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void onLoginSuccess() {
         _loginButton.setEnabled(true);
-        Intent intent = new Intent(getApplicationContext(), TabActivity.class);
+        Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
         startActivityForResult(intent, SUCCESS_SIGNIN);
         finish();
         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);

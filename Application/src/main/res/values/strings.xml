@@ -26,8 +26,8 @@
     <string name="purchase">Execute</string>
     <string name="fingerprint_not_recognized">Fingerprint not recognized. Try again</string>
     <string name="fingerprint_success">Fingerprint recognized</string>
-    <string name="item_title">Inhouse Transfer to 1022003347 (Picolov)</string>
-    <string name="item_price">Rp 350.000</string>
+    <string name="item_title">Inhouse Transfer to :</string>
+    <string name="item_price">How Much :</string>
     <string name="item_description">inhouse transfer.</string>
     <string name="purchase_done">Transfer successful</string>
     <string name="purchase_fail">Transfer failed</string>
@@ -41,13 +41,37 @@
     <string name="user_id_key">user_id</string>
     <string name="title_activity_tab">TabActivity</string>
     <string name="title_home">News</string>
-    <string name="title_dashboard">Send Money</string>
-    <string name="title_notifications">Get Money</string>
+    <string name="title_dashboard">Fast Transfer</string>
+    <string name="title_notifications">All Menu</string>
     <string name="news_title1">Btpn Only a Finger away</string>
     <string name="news_desc1">Are you searching your token all the time?, keep forgeting your password ?, phone is too small to write on ?, now you can use your fingerprint instead of using token, now you Always Carry, Always Remember, Always Easy</string>
-    <string name="news_date1">25 januari 2018</string>
+    <string name="news_date1">25 Januari 2018</string>
     <string name="news_title2">Btpn Jenius Parade</string>
     <string name="news_desc2">Join Us, Have Fun on 25 January 2018, live music, tasty food, great time</string>
-    <string name="news_date2">24 januari 2018</string>
+    <string name="news_date2">24 Januari 2018</string>
+    <string name="news_title3">Hackathon Day!</string>
+    <string name="news_desc3">Calling all programmer all around Jakarta, hack the world with BTPN Jenius</string>
+    <string name="news_date3">12 Agustus 2017</string>
+    <string name="news_title4">Ulang tahun BTPN Wow ke 3</string>
+    <string name="news_desc4">Sudah 3 tahun Wow melayani customer loyal kami, nikmati bunga khusus bagi 5 pelanggan terlama kami</string>
+    <string name="news_date4">5 July 2017</string>
     <string name="see_more">See More</string>
+    <string name="myaccount">My Account</string>
+    <string name="inhousetransfer">In House Transfer</string>
+    <string name="rtgs">RTGS</string>
+    <string name="giro">Giro</string>
+    <string name="pajak">Pajak</string>
+    <string name="personalLoan">Personal Loan</string>
+    <string name="kkb">Kredit Kendaraan</string>
+    <string name="account_prompt">Select Account</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="detailed_search">Detailed Search</string>
+
+    <string-array name="account_arrays">
+        <item>1002422342</item>
+        <item>2046345244</item>
+        <item>2445356674</item>
+        <item>5943445565</item>
+    </string-array>
+    <string name="title_activity_maps2">Map</string>
 </resources>

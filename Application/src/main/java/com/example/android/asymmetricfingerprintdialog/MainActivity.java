@@ -18,6 +18,7 @@ package com.example.android.asymmetricfingerprintdialog;
 
 import android.app.Activity;
 import android.app.KeyguardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.fingerprint.FingerprintManager;
@@ -25,11 +26,15 @@ import android.os.Bundle;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,7 +56,7 @@ import javax.inject.Inject;
 /**
  * Main entry point for the sample, showing a backpack and "Purchase" button.
  */
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private static final String DIALOG_FRAGMENT_TAG = "myFragment";
     /** Alias for our key in the Android Key Store */
@@ -60,11 +65,17 @@ public class MainActivity extends Activity {
     @Inject KeyguardManager mKeyguardManager;
     @Inject FingerprintManager mFingerprintManager;
     @Inject
-    FingerprintAuthenticationDialogFragment mFragment;
+    FingerprintAuthenticationDialogFragment2 mFragment;
     @Inject KeyStore mKeyStore;
     @Inject KeyPairGenerator mKeyPairGenerator;
     @Inject Signature mSignature;
     @Inject SharedPreferences mSharedPreferences;
+
+    private LinearLayout newsContainer;
+    private LinearLayout favoriteContainer;
+    private LinearLayout allContainer;
+
+    String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +83,20 @@ public class MainActivity extends Activity {
         ((InjectedApplication) getApplication()).inject(this);
 
         setContentView(R.layout.activity_main);
+
+        SharedPreferences prefs = this.getSharedPreferences("com.bluecamel.app", Context.MODE_PRIVATE);
+
+        String userid_key = "com.bluecamel.app.userid";
+
+        // use a default value using new Date()
+        userId = prefs.getString(userid_key, "demo");
+
+        newsContainer = (LinearLayout) findViewById(R.id.newsContainer);
+        favoriteContainer = (LinearLayout) findViewById(R.id.favoriteContainer);
+        allContainer = (LinearLayout) findViewById(R.id.allContainer);
+        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
         Button purchaseButton = (Button) findViewById(R.id.purchase_button);
         if (!mKeyguardManager.isKeyguardSecure()) {
             // Show a message that the user hasn't set up a fingerprint or lock screen.
@@ -102,7 +127,7 @@ public class MainActivity extends Activity {
                 // Set up the crypto object for later. The object will be authenticated by use
                 // of the fingerprint.
                 if (initSignature()) {
-
+                    mFragment.setUserId(userId);
                     // Show the fingerprint dialog. The user has the option to use the fingerprint with
                     // crypto, or you can fall back to using a server-side verified password.
                     mFragment.setCryptoObject(new FingerprintManager.CryptoObject(mSignature));
@@ -111,10 +136,10 @@ public class MainActivity extends Activity {
                                     true);
                     if (useFingerprintPreference) {
                         mFragment.setStage(
-                                FingerprintAuthenticationDialogFragment.Stage.FINGERPRINT);
+                                FingerprintAuthenticationDialogFragment2.Stage.FINGERPRINT);
                     } else {
                         mFragment.setStage(
-                                FingerprintAuthenticationDialogFragment.Stage.PASSWORD);
+                                FingerprintAuthenticationDialogFragment2.Stage.PASSWORD);
                     }
                     mFragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
                 } else {
@@ -123,7 +148,7 @@ public class MainActivity extends Activity {
                     // and ask the user if they want to authenticate with fingerprints in the
                     // future
                     mFragment.setStage(
-                            FingerprintAuthenticationDialogFragment.Stage.NEW_FINGERPRINT_ENROLLED);
+                            FingerprintAuthenticationDialogFragment2.Stage.NEW_FINGERPRINT_ENROLLED);
                     mFragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
                 }
             }
@@ -213,4 +238,31 @@ public class MainActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
+            = new BottomNavigationView.OnNavigationItemSelectedListener() {
+
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.navigation_home:
+                    newsContainer.setVisibility(LinearLayout.VISIBLE);
+                    favoriteContainer.setVisibility(LinearLayout.GONE);
+                    allContainer.setVisibility(LinearLayout.GONE);
+                    return true;
+                case R.id.navigation_dashboard:
+                    newsContainer.setVisibility(LinearLayout.GONE);
+                    favoriteContainer.setVisibility(LinearLayout.VISIBLE);
+                    allContainer.setVisibility(LinearLayout.GONE);
+                    return true;
+                case R.id.navigation_notifications:
+                    newsContainer.setVisibility(LinearLayout.GONE);
+                    favoriteContainer.setVisibility(LinearLayout.GONE);
+                    allContainer.setVisibility(LinearLayout.VISIBLE);
+                    return true;
+            }
+            return false;
+        }
+
+    };
 }

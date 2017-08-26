@@ -1,15 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.android.asymmetricfingerprintdialog.MainActivity">
 
-    <LinearLayout
+    <FrameLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/newsContainer"
+            android:visibility="visible"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-        <LinearLayout
+            <LinearLayout
+                android:id="@+id/newsLayout1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -23,29 +36,161 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp">
 
-            <TextView
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@android:style/TextAppearance.Material.Headline"
-                    android:text="@string/item_title"/>
+                    android:textAppearance="@android:style/TextAppearance.Material.Body2"
+                    android:text="@string/news_title1"/>
 
-            <TextView
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Body2"
                     android:textColor="?android:attr/colorAccent"
-                    android:text="@string/item_price"/>
+                    android:text="@string/news_desc1"/>
 
-            <TextView
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:textAppearance="@android:style/TextAppearance.Material.Body1"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:text="@string/item_description"/>
+                    android:text="@string/news_date1"/>
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/newsLayout2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical"
+                android:background="@drawable/card"
+                android:elevation="4dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@android:style/TextAppearance.Material.Body2"
+                    android:text="@string/news_title2"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@android:style/TextAppearance.Material.Body2"
+                    android:textColor="?android:attr/colorAccent"
+                    android:text="@string/news_desc2"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:textAppearance="@android:style/TextAppearance.Material.Body1"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:text="@string/news_date2"/>
+
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/newsLayout3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical"
+                android:background="@drawable/card"
+                android:elevation="4dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@android:style/TextAppearance.Material.Body2"
+                    android:text="@string/news_title3"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@android:style/TextAppearance.Material.Body2"
+                    android:textColor="?android:attr/colorAccent"
+                    android:text="@string/news_desc3"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:textAppearance="@android:style/TextAppearance.Material.Body1"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:text="@string/news_date3"/>
+
+            </LinearLayout>
         </LinearLayout>
-        <Button style="@android:style/Widget.Material.Button.Colored"
+
+        <LinearLayout
+            android:id="@+id/favoriteContainer"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical"
+                android:background="@drawable/card"
+                android:elevation="4dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@android:style/TextAppearance.Material.Headline"
+                    android:text="@string/item_title"/>
+                <Spinner
+                    android:id="@+id/spinner1"
+                    android:layout_marginTop="16dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/account_arrays"
+                    android:prompt="@string/account_prompt" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:textAppearance="@android:style/TextAppearance.Material.Body2"
+                    android:textColor="?android:attr/colorAccent"
+                    android:text="@string/item_price"/>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:layout_marginBottom="8dp">
+                    <EditText android:id="@+id/input_email"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number" />
+                </android.support.design.widget.TextInputLayout>
+
+
+            </LinearLayout>
+            <Button style="@android:style/Widget.Material.Button.Colored"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -55,7 +200,7 @@
                 android:text="@string/purchase"
                 android:id="@+id/purchase_button"/>
 
-        <TextView
+            <TextView
                 android:id="@+id/confirmation_message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -67,7 +212,7 @@
                 android:text="@string/purchase_done"
                 android:visibility="gone"/>
 
-        <TextView
+            <TextView
                 android:id="@+id/encrypted_message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -78,5 +223,96 @@
                 android:textColor="?android:attr/colorAccent"
                 android:text="@string/purchase_done"
                 android:visibility="gone"/>
-    </LinearLayout>
-</ScrollView>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/allContainer"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <Button style="@android:style/Widget.Material.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_gravity="end"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:text="@string/myaccount"
+                android:id="@+id/myaccount_button"/>
+            <Button style="@android:style/Widget.Material.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_gravity="end"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:text="@string/inhousetransfer"
+                android:id="@+id/inhousetransfer_button"/>
+            <Button style="@android:style/Widget.Material.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_gravity="end"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:text="@string/rtgs"
+                android:id="@+id/rtgs_button"/>
+            <Button style="@android:style/Widget.Material.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_gravity="end"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:text="@string/giro"
+                android:id="@+id/giro_button"/>
+            <Button style="@android:style/Widget.Material.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_gravity="end"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:text="@string/pajak"
+                android:id="@+id/pajak_button"/>
+            <Button style="@android:style/Widget.Material.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_gravity="end"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:text="@string/personalLoan"
+                android:id="@+id/personalLoan_button"/>
+            <Button style="@android:style/Widget.Material.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_gravity="end"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:text="@string/kkb"
+                android:id="@+id/kkb_button"/>
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <android.support.design.widget.BottomNavigationView
+        android:id="@+id/navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="?android:attr/windowBackground"
+        app:itemIconTint="@color/tabselector"
+        app:itemTextColor="@color/tabselector"
+        android:layout_alignParentBottom="true"
+        app:menu="@menu/navigation" />
+
+</LinearLayout>

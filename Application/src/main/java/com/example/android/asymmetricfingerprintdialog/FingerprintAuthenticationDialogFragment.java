@@ -273,6 +273,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
             case FINGERPRINT:
                 mCancelButton.setText(R.string.cancel);
                 mSecondDialogButton.setText(R.string.use_password);
+                mSecondDialogButton.setVisibility(View.GONE);
                 mFingerprintContent.setVisibility(View.VISIBLE);
                 mBackupContent.setVisibility(View.GONE);
                 break;
@@ -281,6 +282,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
             case PASSWORD:
                 mCancelButton.setText(R.string.cancel);
                 mSecondDialogButton.setText(R.string.ok);
+                mSecondDialogButton.setVisibility(View.VISIBLE);
                 mFingerprintContent.setVisibility(View.GONE);
                 mBackupContent.setVisibility(View.VISIBLE);
                 if (mStage == Stage.NEW_FINGERPRINT_ENROLLED) {
@@ -306,7 +308,7 @@ public class FingerprintAuthenticationDialogFragment extends DialogFragment
         @Override
         protected Boolean doInBackground(JSONObject... params) {
             try {
-                URL url = new URL("http://192.168.110.154:6969/hackathon/verify");
+                URL url = new URL("http://182.16.165.81:8080/main/verify");
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setDoOutput(true);
                 urlConnection.setChunkedStreamingMode(0);
