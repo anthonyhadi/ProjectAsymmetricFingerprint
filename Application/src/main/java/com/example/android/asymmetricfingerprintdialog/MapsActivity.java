@@ -68,6 +68,8 @@ public class MapsActivity extends AppCompatActivity
     double latInitial = -6.174668;
     double lngInitial = 106.827126;
     float zoomInitial = 15.0f;
+    double latCurr = latInitial;
+    double lngCurr = lngInitial;
 
     private void createCustomAnimation() {
         AnimatorSet set = new AnimatorSet();
@@ -122,6 +124,8 @@ public class MapsActivity extends AppCompatActivity
 //                        ContextCompat.getColor(context, R.color.transparent));
 //                offerGoodsBtn.setLabelTextColor(ContextCompat.getColor(context, R.color.black));
                 Intent intent = new Intent(getApplicationContext(),OfferGoodActivity.class);
+                intent.putExtra("LAT_CURR", latCurr+"");
+                intent.putExtra("LNG_CURR", lngCurr+"");
                 startActivity(intent);
                 finish();
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);

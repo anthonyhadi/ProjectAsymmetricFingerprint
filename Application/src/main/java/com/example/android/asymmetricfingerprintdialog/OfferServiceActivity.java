@@ -6,8 +6,11 @@ import android.view.View;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import org.json.JSONObject;
 
 /**
  * Created by Emerio on 8/26/2017.
@@ -35,6 +38,33 @@ public class OfferServiceActivity extends AppCompatActivity {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Spinner categorySpinner = (Spinner) findViewById(R.id.category);
+                String category = categorySpinner.getSelectedItem().toString();
+
+                EditText nameEditText = (EditText) findViewById(R.id.editText3);
+                String name = nameEditText.getText().toString();
+
+                EditText tagsEditText = (EditText) findViewById(R.id.editText4);
+                String tags = tagsEditText.getText().toString();
+
+                EditText costEditText = (EditText) findViewById(R.id.cost);
+                String cost = costEditText.getText().toString();
+
+                EditText descEditText = (EditText) findViewById(R.id.description);
+                String desc = descEditText.getText().toString();
+
+                JSONObject obj = new JSONObject();
+                try {
+                    obj.put("type", "jasa");
+                    obj.put("category", category);
+                    obj.put("name", name);
+                    obj.put("tag", tags);
+                    obj.put("cost", cost);
+                    obj.put("desc", desc);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
                 Toast.makeText(getBaseContext(), "Submit sukses",
                         Toast.LENGTH_LONG).show();
 
