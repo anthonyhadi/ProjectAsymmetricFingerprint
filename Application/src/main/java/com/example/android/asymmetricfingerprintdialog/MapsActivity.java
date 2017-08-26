@@ -394,6 +394,8 @@ public class MapsActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), OfferServiceActivity.class);
+                intent.putExtra("LAT_CURR", latCurr + "");
+                intent.putExtra("LNG_CURR", lngCurr + "");
                 startActivity(intent);
                 finish();
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
