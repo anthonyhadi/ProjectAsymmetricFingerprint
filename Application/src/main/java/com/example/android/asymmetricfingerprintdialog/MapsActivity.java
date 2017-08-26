@@ -8,6 +8,7 @@ import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -62,6 +63,7 @@ public class MapsActivity extends AppCompatActivity
     Marker mCurrLocationMarker;
     FloatingActionMenu menu;
     FloatingActionButton offerGoodsBtn;
+    FloatingActionButton offerServicesBtn;
 
     double latInitial = -6.174668;
     double lngInitial = 106.827126;
@@ -115,10 +117,25 @@ public class MapsActivity extends AppCompatActivity
         offerGoodsBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                offerGoodsBtn.setLabelColors(ContextCompat.getColor(context, R.color.primary),
-                        ContextCompat.getColor(context, R.color.warning_color),
-                        ContextCompat.getColor(context, R.color.transparent));
-                offerGoodsBtn.setLabelTextColor(ContextCompat.getColor(context, R.color.black));
+//                offerGoodsBtn.setLabelColors(ContextCompat.getColor(context, R.color.primary),
+//                        ContextCompat.getColor(context, R.color.warning_color),
+//                        ContextCompat.getColor(context, R.color.transparent));
+//                offerGoodsBtn.setLabelTextColor(ContextCompat.getColor(context, R.color.black));
+                Intent intent = new Intent(getApplicationContext(),OfferGoodActivity.class);
+                startActivity(intent);
+                finish();
+                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+            }
+        });
+
+        offerServicesBtn = (FloatingActionButton) findViewById(R.id.button2);
+        offerServicesBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(),OfferServiceActivity.class);
+                startActivity(intent);
+                finish();
+                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             }
         });
     }

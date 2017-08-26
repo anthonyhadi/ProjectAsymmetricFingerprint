@@ -2,9 +2,9 @@ package com.example.android.asymmetricfingerprintdialog;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -13,14 +13,14 @@ import android.widget.Toast;
  * Created by Emerio on 8/26/2017.
  */
 
-public class OfferGoodActivity extends AppCompatActivity {
+public class OfferServiceActivity extends AppCompatActivity {
 
     AppCompatButton submitButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_offer_good);
+        setContentView(R.layout.activity_offer_service);
 
         Spinner spinner = (Spinner) findViewById(R.id.category);
 // Create an ArrayAdapter using the string array and a default spinner layout
