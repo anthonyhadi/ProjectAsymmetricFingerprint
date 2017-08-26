@@ -142,6 +142,33 @@ public class MapsActivity extends AppCompatActivity
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             }
         });
+
+        FloatingActionButton searchGoodsBtn = (FloatingActionButton) findViewById(R.id.button12);
+        searchGoodsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FloatingActionMenu menu3 = (FloatingActionMenu) findViewById(R.id.menu3);
+                menu3.getMenuIconView().setImageResource(R.drawable.goblin);
+            }
+        });
+
+        FloatingActionButton searchServicesBtn = (FloatingActionButton) findViewById(R.id.button22);
+        searchServicesBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FloatingActionMenu menu3 = (FloatingActionMenu) findViewById(R.id.menu3);
+                menu3.getMenuIconView().setImageResource(R.drawable.robot);
+            }
+        });
+
+        FloatingActionButton searchMoneyBtn = (FloatingActionButton) findViewById(R.id.button32);
+        searchMoneyBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FloatingActionMenu menu3 = (FloatingActionMenu) findViewById(R.id.menu3);
+                menu3.getMenuIconView().setImageResource(R.drawable.robot);
+            }
+        });
     }
 
     @Override
