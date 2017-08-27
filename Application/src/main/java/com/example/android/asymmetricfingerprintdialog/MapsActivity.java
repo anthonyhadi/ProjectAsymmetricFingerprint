@@ -609,6 +609,25 @@ public class MapsActivity extends AppCompatActivity
                 }
             }
         });
+
+        profileBtn = (FloatingActionButton) findViewById(R.id.profile);
+        profileBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressDialog = new ProgressDialog(MapsActivity.this,
+                        R.style.AppTheme_Dark_Dialog);
+                progressDialog.setIndeterminate(true);
+                progressDialog.setMessage("Please wait...");
+                progressDialog.show();
+                try {
+                    JSONObject obj3 = new JSONObject();
+                    obj3.put("userId", userId);
+                    new ProfileTask().execute(obj3);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 /*
         final Handler h = new Handler();
 
@@ -681,24 +700,6 @@ public class MapsActivity extends AppCompatActivity
     public void onClose(View v) {
         atmContainer.setVisibility(RelativeLayout.GONE);
         chatContainer.setVisibility(RelativeLayout.GONE);
-        profileBtn = (FloatingActionButton) findViewById(R.id.profile);
-        profileBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressDialog = new ProgressDialog(MapsActivity.this,
-                        R.style.AppTheme_Dark_Dialog);
-                progressDialog.setIndeterminate(true);
-                progressDialog.setMessage("Please wait...");
-                progressDialog.show();
-                try {
-                    JSONObject obj3 = new JSONObject();
-                    obj3.put("userId", userId);
-                    new ProfileTask().execute(obj3);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
     }
 
     @Override
